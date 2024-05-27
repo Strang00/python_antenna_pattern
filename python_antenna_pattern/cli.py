@@ -156,9 +156,9 @@ class Pyap:
         tick_start = config.TICK_START
         tick_stop = config.TICK_STOP
         tick_spacing = config.TICK_SPACING
-        tick_stop_shift = 0.2
-        lw = 2
-        rlim_shift=4
+        tick_stop_shift = config.TICK_STOP_SHIFT
+        line_width = config.LINE_WIDTH
+        rlim_shift = config.RLIM_SHIFT
 
         for file_path in src_files:
             antenna_pattern = AntennaPattern()
@@ -240,7 +240,7 @@ class Pyap:
             )
             fig.suptitle(plot_title)
             ax = plt.subplot(111, polar=True, projection='polar')
-            ax.set_rlim(min(rho[key]), max(rho[key]) + rlim_shift)
+            ax.set_rlim(min(min(rho[key]),config.TICK_START), max(max(rho[key]), config.TICK_STOP) + rlim_shift)
             # set where the zero location is
             ax.set_theta_zero_location('N')
             # set the angle to be increasing clockwise or counterclockwise
@@ -258,16 +258,18 @@ class Pyap:
             if key == 'horizontal' and config.C250_FLAG is True:
                 rotation_offset = config.C250_ROTATION_OFFSET
                 for l in range(0, 360):
-                    buf1[(l + rotation_offset) % 360] = temp1[l]
                     buf2[(l + rotation_offset) % 360] = temp2[l]
+                    if self.single_file_flag is False:
+                        buf1[(l + rotation_offset) % 360] = temp1[l]
                 temp1 = buf1
                 temp2 = buf2
 
             if options.rotation_offset > 0:
                 rotation_offset = options.rotation_offset
                 for l in range(0, 360):
-                    buf1[(l + rotation_offset) % 360] = temp1[l]
                     buf2[(l + rotation_offset) % 360] = temp2[l]
+                    if self.single_file_flag is False:
+                        buf1[(l + rotation_offset) % 360] = temp1[l]
                 temp1 = buf1
                 temp2 = buf2
 
@@ -278,7 +280,7 @@ class Pyap:
                     label=key, #'Antenna 1',
                     color= 'blue' if key == 'horizontal' else 'red',
                     ls='-',
-                    lw=lw
+                    lw=line_width
                 )
             else:
                 plt.polar(
@@ -287,7 +289,7 @@ class Pyap:
                     label= key + ' 1', #'Antenna 1',
                     color='blue',
                     ls='-',
-                    lw=lw
+                    lw=line_width
                 )
                 plt.polar(
                     theta,
@@ -295,7 +297,7 @@ class Pyap:
                     label= key + ' 2', #'Antenna 2',
                     color='red',
                     ls='--',
-                    lw=lw
+                    lw=line_width
                 )
                 # short/left is always blue
 
