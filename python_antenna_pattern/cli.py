@@ -74,12 +74,13 @@ class Pyap:
         self.arg_parser.add_argument(
             '-f',
             '--filetype',
-            choices=['eps', 'pdf'],
+            choices=['eps', 'pdf', 'png'],
             dest='filetype',
             default='pdf',
-            help='File type of the output figure, either pdf or eps'
+            help='File type of the output figure, either pdf or eps or png'
         )
         self.arg_parser.add_argument(
+            '-z',
             '--fontsize',
             type=int,
             dest='fontsize',
@@ -237,7 +238,7 @@ class Pyap:
             plot_title = (
                 'Frequency: ' + str(band[0]) + ' MHz. ' + max_gain_db_str
             )
-            fig.suptitle(plot_title, fontsize=fontsize)
+            fig.suptitle(plot_title)
             ax = plt.subplot(111, polar=True, projection='polar')
             ax.set_rlim(min(rho[key]), max(rho[key]) + rlim_shift)
             # set where the zero location is
@@ -274,8 +275,8 @@ class Pyap:
                 plt.polar(
                     theta,
                     temp2,
-                    label='Antenna 1',
-                    color='blue',
+                    label=key, #'Antenna 1',
+                    color= 'blue' if key == 'horizontal' else 'red',
                     ls='-',
                     lw=lw
                 )
@@ -283,7 +284,7 @@ class Pyap:
                 plt.polar(
                     theta,
                     temp2,
-                    label='Antenna 1',
+                    label= key + ' 1', #'Antenna 1',
                     color='blue',
                     ls='-',
                     lw=lw
@@ -291,7 +292,7 @@ class Pyap:
                 plt.polar(
                     theta,
                     temp1,
-                    label='Antenna 2',
+                    label= key + ' 2', #'Antenna 2',
                     color='red',
                     ls='--',
                     lw=lw
