@@ -144,7 +144,7 @@ class Pyap:
             sys.exit(70)
 
 
-        degree = np.arange(0, 360, 1)
+        degree = np.arange(0, 361, 1)
         theta = degree*2*np.pi/360
         p_list = []
         dir_path = []
@@ -274,6 +274,7 @@ class Pyap:
                 temp2 = buf2
 
             if self.single_file_flag is True:
+                temp2 = np.insert(temp2,360,temp2[0])
                 plt.polar(
                     theta,
                     temp2,
@@ -283,6 +284,8 @@ class Pyap:
                     lw=line_width
                 )
             else:
+                temp1 = np.insert(temp1,360,temp1[0])
+                temp2 = np.insert(temp2,360,temp2[0])
                 plt.polar(
                     theta,
                     temp2,
