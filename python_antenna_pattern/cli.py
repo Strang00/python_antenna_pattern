@@ -117,7 +117,7 @@ class Pyap:
 
 
 
-    # TODO: use optparse to add optinos rather than using config.py
+    # TODO: use optparse to add options rather than using config.py
     def plot_pattern(self, options, save_file=True):
 
         fontsize = options.fontsize
@@ -138,8 +138,9 @@ class Pyap:
             print('Converting file {}'.format(options.target))
             src_files = [options.target, ]
         else:
-            print('Cannot find file or director {}'.format(options.target))
-            sys.exit(os.EX_SOFTWARE)
+            print('Cannot find file or directory {}'.format(options.target))
+            #sys.exit(os.EX_SOFTWARE) # Available only on UNIX platforms.
+            sys.exit(70)
 
 
         degree = np.arange(0, 360, 1)
@@ -178,7 +179,8 @@ class Pyap:
                 'PYAP currently does not support more than a pair of file',
                 file=sys.stderr
             )
-            sys.exit(os.EX_SOFTWARE)
+            #sys.exit(os.EX_SOFTWARE) # Available only on UNIX platforms.
+            sys.exit(70)
 
         if len(src_files) < 2:
             self.single_file_flag = True
@@ -190,7 +192,8 @@ class Pyap:
                     'Frequency band not match: {}'.format(band),
                     file=sys.stderr
                 )
-                sys.exit(os.EX_SOFTWARE)
+                #sys.exit(os.EX_SOFTWARE) # Available only on UNIX platforms.
+                sys.exit(70)
 
         max_gain_db_slist = []
         rho = {}
