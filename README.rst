@@ -18,17 +18,18 @@ Simple cli to
  * convert individual file or convert entire folder of files
 
 
-Examples:
+Examples::
 
     python pyap -g -n TEST_ ./python_antenna_pattern/data/LTE-L_1960MHz_P1.txt  
     python pyap -g -3 -f png -n TEST_ ./python_antenna_pattern/data/AMB4520R8v06_05T.msi
 
+
 Usage::
 
-    usage: pyap [-h] [-v] [-s] [-g] [-3] [--show-name] [-r ROTATION_OFFSET]
-                [-f {pdf,eps,png}] [-n FILE_NAME_PREFIX] [--fontsize FONTSIZE]
-                [--size IMAGE_SIZE_X100PX]
-                target_pattern_file
+    pyap [-h] [-v] [-s] [-g] [-3] [--show-name] [-r ROTATION_OFFSET]
+         [-f {pdf,eps,png}] [-n FILE_NAME_PREFIX] [--fontsize FONTSIZE]
+         [--size IMAGE_SIZE_X100PX]
+         target_pattern_file
 
 
 Credits
