@@ -33,7 +33,9 @@ Examples::
    Horizontal pattern generated for AMB4520R8v06_05T.msi
 
 
-Usage::
+
+Usage
+-----
 
    pyap [-h] [-v] [-s] [-g] [-3] [--show-name] [-r ROTATION_OFFSET]
         [-f {pdf,eps,png}] [-n FILE_NAME_PREFIX] [--fontsize FONTSIZE]
