@@ -18,24 +18,19 @@ Simple cli to
  * use individual file pattern file or all files by mask (2 only now)
 
 
-.. image:: data/png/TEST_AMB4520R8v06_05T_horizontal.png
-   :height: 400
-   :width: 400
-   :alt: Horizontal pattern generated
-
-.. image:: data/png/TEST_AMB4520R8v06_05T_vertical.png
-   :height: 400
-   :width: 400
-   :alt: Vertical pattern generated
-
-![Horizontal test](data/png/TEST_AMB4520R8v06_05T_horizontal.png)
-
-
 Examples::
 
    python pyap -g -3 -f png -n TEST_ ./data/AMB4520R8v06_05T.msi
    python pyap -g -n TEST_ ./data/LTE-L_1960MHz_P1.txt  
    python pyap -g -n TEST_ "./data/*.txt" 
+
+
+.. figure:: data/png/TEST_AMB4520R8v06_05T_horizontal.png
+   :height: 400
+   :width: 400
+   :alt: Horizontal pattern
+
+   Horizontal pattern generated for AMB4520R8v06_05T.msi
 
 
 Usage::

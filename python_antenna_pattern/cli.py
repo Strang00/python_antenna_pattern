@@ -143,8 +143,8 @@ class Pyap:
 
         fontsize = options.fontsize
         imagesize = options.imagesize
-        file_name_prefix=options.file_name_prefix
-        file_format=options.filetype
+        file_name_prefix = options.file_name_prefix
+        file_format = options.filetype
         show_name = options.show_name
         show_3db = options.show_3db
         plt.rc('font', size=fontsize)
