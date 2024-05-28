@@ -37,7 +37,7 @@ class Pyap:
             action='store_true',
             dest='verbose',
             default=False,
-            help='Show all logs when running the commands.'
+            help='show extra diagnostic messages during execution'
         )
         self.arg_parser.add_argument(
             '-s',
@@ -45,7 +45,7 @@ class Pyap:
             action='store_true',
             dest='show_fig',
             default=False,
-            help='Show figure. This will pause after each figure is generated.'
+            help='show figure, pause after each figure is generated'
         )
         self.arg_parser.add_argument(
             '-g',
@@ -53,7 +53,7 @@ class Pyap:
             action='store_true',
             dest='show_legend',
             default=False,
-            help='Show legend'
+            help='show legend'
         )
         self.arg_parser.add_argument(
             '-3',
@@ -61,21 +61,20 @@ class Pyap:
             action='store_true',
             dest='show_3db',
             default=False,
-            help='Show half-power line (max - 3dB)'
+            help='show half-power line (max - 3dB)'
         )
         self.arg_parser.add_argument(
             '--show-name',
             action='store_true',
             dest='show_name',
             default=False,
-            help='Add NAME attribute to caption'
+            help='show NAME attribute in caption'
         )
         self.arg_parser.add_argument(
             type=str,
-            dest='target_pattern_file',
+            dest='pattern',
             help=(
-                'Use specified file, list of files, or a directory containing '
-                'planet files to plot antenna pattern'
+                'use specified file or a directory with planet files'
             )
         )
         self.arg_parser.add_argument(
@@ -84,7 +83,7 @@ class Pyap:
             type=int,
             dest='rotation_offset',
             default=0,
-            help='Rotational offset when plotting the polar pattern'
+            help='rotational offset when plotting the polar pattern'
         )
         self.arg_parser.add_argument(
             '-f',
@@ -92,7 +91,7 @@ class Pyap:
             choices=['pdf', 'eps', 'png'],
             dest='filetype',
             default='pdf',
-            help='File type of the output figure, either pdf or eps or png'
+            help='file type of the output figure, pdf or eps or png'
         )
         self.arg_parser.add_argument(
             '-n',
@@ -100,21 +99,21 @@ class Pyap:
             type=str,
             dest='file_name_prefix',
             default='PYAP_',
-            help='Prefix of the generated filename'
+            help='prefix of the generated filename'
         )
         self.arg_parser.add_argument(
             '--fontsize',
             type=int,
             dest='fontsize',
             default=12,
-            help='Font size in the legend and the title'
+            help='font size for texts on the chart'
         )
         self.arg_parser.add_argument(
             '--size',
             type=int,
-            dest='image_size_x100px',
+            dest='imagesize',
             default=8,
-            help='Image size in 100px units'
+            help='image size in 100px units'
         )
 
 
@@ -143,28 +142,28 @@ class Pyap:
     def plot_pattern(self, options, save_file=True):
 
         fontsize = options.fontsize
-        image_size = options.image_size_x100px
+        imagesize = options.imagesize
         file_name_prefix=options.file_name_prefix
         file_format=options.filetype
         show_name = options.show_name
         show_3db = options.show_3db
         plt.rc('font', size=fontsize)
-        if os.path.isdir(options.target_pattern_file):
-            src_files = glob.glob(options.directory)
+        if not os.path.isfile(options.pattern):
+            src_files = glob.glob(options.pattern)
             if len(src_files) == 0:
                 print(
-                    'No files in directory {}'.format(options.target_pattern_file),
+                    'No files in directory {}'.format(options.pattern),
                     file=sys.stderr
                 )
                 sys.exit(os.EX_NOTFOUND)
             else:
                 print('Files to be converted: {}'.format(src_files))
 
-        elif os.path.isfile(options.target_pattern_file):
-            print('Converting file {}'.format(options.target_pattern_file))
-            src_files = [options.target_pattern_file, ]
+        elif os.path.isfile(options.pattern):
+            print('Converting file {}'.format(options.pattern))
+            src_files = [options.pattern, ]
         else:
-            print('Cannot find file or directory {}'.format(options.target_pattern_file))
+            print('Cannot find file or directory {}'.format(options.pattern))
             sys.exit(70) # os.EX_SOFTWARE available only on UNIX platforms.
 
 
@@ -185,7 +184,18 @@ class Pyap:
         rlim_shift = config.RLIM_SHIFT
         gain_ticks_position = config.TICK_POSITION # good with 45 also
 
-        for file_path in src_files:
+        if len(src_files) > 2:
+            print(
+                'PYAP currently does not support more than a pair of files at once',
+                file=sys.stderr
+            )
+            sys.exit(70) # os.EX_SOFTWARE available only on UNIX platforms.
+
+        if len(src_files) < 2:
+            self.single_file_flag = True
+
+        for file_path_original in src_files:
+            file_path = file_path_original.replace('\\', '/')
             antenna_pattern = AntennaPattern()
             # parse the antenna gains by cut or by antenna
             antenna_pattern.parse_data(file_path) # config.PARSE_BY
@@ -202,16 +212,6 @@ class Pyap:
             # all but last element in the list
             dir_path.append('/'.join(split_name[0:-1]) + '/')
 
-        if len(src_files) > 2:
-            print(
-                'PYAP currently does not support more than a pair of file',
-                file=sys.stderr
-            )
-            sys.exit(70) # os.EX_SOFTWARE available only on UNIX platforms.
-
-        if len(src_files) < 2:
-            self.single_file_flag = True
-
         if len(band) > 1:
             print('Frequency band list: {}'.format(band), file=sys.stderr)
             if band[0] != band[1]:
@@ -224,10 +224,14 @@ class Pyap:
         max_gain_db_slist = []
         rho = {}
         counter = 0
-        path_counter = 0
         max_list = []
 
         for pval in p_list:
+
+            if len(pval.pattern_dict.keys()) != 2:
+                print('Invalid antenna pattern was loaded from ' + pval.file, file=sys.stderr)
+                sys.exit(70) # os.EX_SOFTWARE available only on UNIX platforms.
+
             # in python 3.x keys() return a set-like object
             labels = list(pval.pattern_dict.keys())
             # clip the small values here
@@ -260,7 +264,7 @@ class Pyap:
             max_list.append(max_gain_db)
             max_gain_db_str = 'Peak Gain: {:.2f} dBi'.format(max_gain_db)
             max_gain_db_slist.append(max_gain_db_str)
-            fig = plt.figure(figsize=(image_size, image_size))
+            fig = plt.figure(figsize=(imagesize, imagesize))
             plot_title = (
                 ((name[0] + '\n') if show_name else '') + 'Frequency: ' + str(band[0]) + ' MHz. ' + max_gain_db_str
             )
@@ -383,13 +387,14 @@ class Pyap:
                 tick_label_full.append(' %1.1f %s' % (x,units))
             ax.set_yticklabels(tick_label_full)
             if save_file:
-                file_path = dir_path[path_counter] + file_format + '/'
-                if not os.path.exists(file_path):
-                    os.makedirs(file_path)
+                file_name_body = os.path.splitext(os.path.basename(file_path))[0]
+                file_path_save = dir_path[0] + file_format + '/'
+                if not os.path.exists(file_path_save):
+                    os.makedirs(file_path_save)
 
                 output_name = (
                     dir_path[0] + file_format + '/' + file_name_prefix
-                    + key + '_' + str(band[0]) + '.' + file_format
+                    + file_name_body + '_' + key + '.' + file_format
                 )
                 plt.savefig(output_name, format=file_format)
                 print(

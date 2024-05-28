@@ -16,9 +16,9 @@ class TestParser(unittest.TestCase):
             'COMMENT None\n'
         )
         self.test_file_list = [
-            ('python_antenna_pattern/data/file_list1', 851),  # sinlge planet file 
-            ('python_antenna_pattern/data/file_list2', 1960), # a pair of planet file
-            ('python_antenna_pattern/data/file_list4', 1960), # four planet files
+            ('data/file_list1', 851),  # sinlge planet file 
+            ('data/file_list2', 1960), # a pair of planet file
+            ('data/file_list4', 1960), # four planet files
         ]
    
     def test_e2e_pyap_result(self):

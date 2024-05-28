@@ -58,6 +58,7 @@ class AntennaPattern():
         self.max_gain_db_str = '0'
         self.frequency = 0
         self.name = 'Unknown' # Name added by Strang
+        self.file = 'Unknown' # File added by Strang
 
     def parse_line(self, line):
         m = self.header_re_pattern.match(line)
@@ -110,7 +111,7 @@ class AntennaPattern():
         #if parse_by == 'cut':
         #    return self.parse_data_by_cut(file_name)
         #else:
-            return self.parse_data_by_ant(file_name)
+        return self.parse_data_by_ant(file_name)
 
     def parse_data_by_ant(self, file_name):
         if config.VERBOSE is True:
@@ -118,6 +119,7 @@ class AntennaPattern():
     
         try:
             with open(file_name, 'r') as fp:
+                self.file = file_name
                 for line in fp:
                     self.parse_line(line) 
         except IOError:

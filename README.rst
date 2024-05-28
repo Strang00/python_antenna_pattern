@@ -3,7 +3,7 @@ python-antenna-pattern
 ======================
 
 
-Generate antenna radiation pattern in polar coordinates using python
+Generate antenna radiation pattern in polar coordinates using python.
 
 
 * Free software: Apache Software License 2.0
@@ -14,14 +14,28 @@ Features
 --------
 
 Simple cli to 
- * generate pdf, eps or ptarget_pattern_fileng file from a planet file
- * convert individual file or convert entire folder of files
+ * generate pdf, eps or png files from a planet pattern file
+ * use individual file pattern file or all files by mask (2 only now)
+
+
+.. image:: data/png/TEST_AMB4520R8v06_05T_horizontal.png
+   :height: 400
+   :width: 400
+   :alt: Horizontal pattern generated
+
+.. image:: data/png/TEST_AMB4520R8v06_05T_vertical.png
+   :height: 400
+   :width: 400
+   :alt: Vertical pattern generated
+
+![Horizontal test](data/png/TEST_AMB4520R8v06_05T_horizontal.png)
 
 
 Examples::
 
-   python pyap -g -n TEST_ ./python_antenna_pattern/data/LTE-L_1960MHz_P1.txt  
-   python pyap -g -3 -f png -n TEST_ ./python_antenna_pattern/data/AMB4520R8v06_05T.msi
+   python pyap -g -3 -f png -n TEST_ ./data/AMB4520R8v06_05T.msi
+   python pyap -g -n TEST_ ./data/LTE-L_1960MHz_P1.txt  
+   python pyap -g -n TEST_ "./data/*.txt" 
 
 
 Usage::
@@ -32,29 +46,27 @@ Usage::
         target_pattern_file
 
    positional arguments:
-      target_pattern_file   Use specified file, list of files, or a directory
-                              containing planet files to plot antenna pattern
+     pattern               use specified file or a directory with planet files
 
    options:
-      -h, --help            show this help message and exit
-      -v, --verbose         Show all logs when running the commands. (default:
-                              False)
-      -s, --show-fig        Show figure. This will pause after each figure is
-                              generated. (default: False)
-      -g, --show-legend     Show legend (default: False)
-      -3, --show-3db        Show half-power line (max - 3dB) (default: False)
-      --show-name           Add NAME attribute to caption (default: False)
-      -r ROTATION_OFFSET, --rotation-offset ROTATION_OFFSET
-                              Rotational offset when plotting the polar pattern
-                              (default: 0)
-      -f {pdf,eps,png}, --filetype {pdf,eps,png}
-                              File type of the output figure, either pdf or eps or
-                              png (default: pdf)
-      -n FILE_NAME_PREFIX, --file-name-prefix FILE_NAME_PREFIX
-                              Prefix of the generated filename (default: PYAP_)
-      --fontsize FONTSIZE   Font size in the legend and the title (default: 12)
-      --size IMAGE_SIZE_X100PX
-                              Image size in 100px units (default: 8)
+     -h, --help            show this help message and exit
+     -v, --verbose         show extra diagnostic messages during execution
+                           (default: False)
+     -s, --show-fig        show figure, pause after each figure is generated
+                           (default: False)
+     -g, --show-legend     show legend (default: False)
+     -3, --show-3db        show half-power line (max - 3dB) (default: False)
+     --show-name           show NAME attribute in caption (default: False)
+     -r ROTATION_OFFSET, --rotation-offset ROTATION_OFFSET
+                           rotational offset when plotting the polar pattern
+                           (default: 0)
+     -f {pdf,eps,png}, --filetype {pdf,eps,png}
+                           file type of the output figure, pdf or eps or png
+                           (default: pdf)
+     -n FILE_NAME_PREFIX, --file-name-prefix FILE_NAME_PREFIX
+                           prefix of the generated filename (default: PYAP_)
+     --fontsize FONTSIZE   font size for texts on the chart (default: 12)
+     --size IMAGE_SIZE     image size in 100px units (default: 8)
 
 
 Credits
