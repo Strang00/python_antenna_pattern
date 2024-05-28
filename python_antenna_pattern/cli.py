@@ -56,13 +56,6 @@ class Pyap:
             help='Show legend'
         )
         self.arg_parser.add_argument(
-            '--show-name',
-            action='store_true',
-            dest='show_name',
-            default=False,
-            help='Add NAME attribute to caption'
-        )
-        self.arg_parser.add_argument(
             '-3',
             '--show-3db',
             action='store_true',
@@ -71,8 +64,15 @@ class Pyap:
             help='Show half-power line (max - 3dB)'
         )
         self.arg_parser.add_argument(
+            '--show-name',
+            action='store_true',
+            dest='show_name',
+            default=False,
+            help='Add NAME attribute to caption'
+        )
+        self.arg_parser.add_argument(
             type=str,
-            dest='target',
+            dest='target_pattern_file',
             help=(
                 'Use specified file, list of files, or a directory containing '
                 'planet files to plot antenna pattern'
@@ -89,7 +89,7 @@ class Pyap:
         self.arg_parser.add_argument(
             '-f',
             '--filetype',
-            choices=['eps', 'pdf', 'png'],
+            choices=['pdf', 'eps', 'png'],
             dest='filetype',
             default='pdf',
             help='File type of the output figure, either pdf or eps or png'
@@ -112,7 +112,7 @@ class Pyap:
         self.arg_parser.add_argument(
             '--size',
             type=int,
-            dest='image_size',
+            dest='image_size_x100px',
             default=8,
             help='Image size in 100px units'
         )
@@ -143,28 +143,28 @@ class Pyap:
     def plot_pattern(self, options, save_file=True):
 
         fontsize = options.fontsize
-        image_size = options.image_size
+        image_size = options.image_size_x100px
         file_name_prefix=options.file_name_prefix
         file_format=options.filetype
         show_name = options.show_name
         show_3db = options.show_3db
         plt.rc('font', size=fontsize)
-        if os.path.isdir(options.target):
+        if os.path.isdir(options.target_pattern_file):
             src_files = glob.glob(options.directory)
             if len(src_files) == 0:
                 print(
-                    'No files in directory {}'.format(options.target),
+                    'No files in directory {}'.format(options.target_pattern_file),
                     file=sys.stderr
                 )
                 sys.exit(os.EX_NOTFOUND)
             else:
                 print('Files to be converted: {}'.format(src_files))
 
-        elif os.path.isfile(options.target):
-            print('Converting file {}'.format(options.target))
-            src_files = [options.target, ]
+        elif os.path.isfile(options.target_pattern_file):
+            print('Converting file {}'.format(options.target_pattern_file))
+            src_files = [options.target_pattern_file, ]
         else:
-            print('Cannot find file or directory {}'.format(options.target))
+            print('Cannot find file or directory {}'.format(options.target_pattern_file))
             sys.exit(70) # os.EX_SOFTWARE available only on UNIX platforms.
 
 
