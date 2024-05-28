@@ -12,17 +12,16 @@ History
 ------------------
 
 * New multiplatform release with bugfixes and improvements.
-* Added support for MS Windows (replaced os.EX_SOFTWARE).
-* Added PNG output filtype and -z alias for --fontsize.
-* Fontsize used simulaneously for title and legend now.
-* Legend contains type of pattern: horizontal or vertical.
-* Vertical drawn red as used in HUAWEI datasheets usually.
-* Config params reviewed, cleaned unused and used all defined.
-* Implemented NAME reading and option --show-name to draw it.
-* Implemented GAIN measure units read and conversion dBd to dBi (used in MSI).
-* Bugfixed usage of C250_FLAG with single file source.
+* Added PNG output filtype and input MSI example.
+* Added type of pattern horizontal or vertical to the legend.
+* Vertical pattern drawn in red as used in HUAWEI datasheets.
+* Config params reviewed, cleaned unused, updated used.
+* Implemented NAME reading and added option --show-name to draw it.
+* Implemented GAIN units reading and conversion dBd to dBi used in MSI.
+* Bugfixed broken usage of C250_FLAG for single file source.
+* Added LINE_WIDTH for pattern line width instead of unused LW.
 * Added MSIV_FLAG and MSIV_ROTATION_OFFSET to rotate vertical pattern only.
-* Added ABSOLUTE_FLAG to draw relative chart (with peak 0dB instead of dBi).
+* Added ABSOLUTE_FLAG to draw relative chart with peak 0dB instead of dBi.
 * Added TICK_POSITION to control dB ticks position and rotation angle.
-* Added option --size and fixed --fontsize usage, updated defaults.
+* Added option --size and changed --fontsize usage, updated defaults.
 * Added option --show-3db to draw half-power level, updated legend position.

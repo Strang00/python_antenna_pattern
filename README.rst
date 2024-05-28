@@ -18,9 +18,10 @@ Simple cli to
  * convert individual file or convert entire folder of files
 
 Examples:
-.. code-block:: bash
-   python pyap -g -n TEST_ ./python_antenna_pattern/data/LTE-L_1960.0MHz_P1.txt  
-
+```bash
+   python pyap -g -n TEST_ ./python_antenna_pattern/data/LTE-L_1960MHz_P1.txt  
+   python pyap -g -3 -f png -n TEST_ ./python_antenna_pattern/data/AMB4520R8v06_05T.msi
+```
 
 
 Credits
