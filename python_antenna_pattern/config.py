@@ -1,10 +1,10 @@
 ##### Default config parameters
 
 VERBOSE=False
-#### Parse by cut or by antenna
-PARSE_BY='ant'
 C250_FLAG=False
 C250_ROTATION_OFFSET=90
+MSIV_FLAG=True
+MSIV_ROTATION_OFFSET=90
 MAX_GAIN_CLIPPING=30
 LOC=0.1
 

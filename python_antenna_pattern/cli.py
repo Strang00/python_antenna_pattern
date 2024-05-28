@@ -269,6 +269,15 @@ class Pyap:
                 temp1 = buf1
                 temp2 = buf2
 
+            if key == 'vertical' and config.MSIV_FLAG is True:
+                rotation_offset = config.MSIV_ROTATION_OFFSET
+                for l in range(0, 360):
+                    buf2[(l + rotation_offset) % 360] = temp2[l]
+                    if self.single_file_flag is False:
+                        buf1[(l + rotation_offset) % 360] = temp1[l]
+                temp1 = buf1
+                temp2 = buf2
+
             if options.rotation_offset > 0:
                 rotation_offset = options.rotation_offset
                 for l in range(0, 360):

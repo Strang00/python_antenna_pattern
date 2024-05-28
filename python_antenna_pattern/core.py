@@ -106,10 +106,10 @@ class AntennaPattern():
             # m = header_re_pattern.match(line)
             self.max_gain_db_str = str(self.max_gain_db) #m.group('value') + m.group('rest'), added by Strang
 
-    def parse_data(self, file_name, parse_by='cut'):
-        if parse_by == 'cut':
-            return self.parse_data_by_cut(file_name)
-        else:
+    def parse_data(self, file_name, parse_by='ant'):
+        #if parse_by == 'cut':
+        #    return self.parse_data_by_cut(file_name)
+        #else:
             return self.parse_data_by_ant(file_name)
 
     def parse_data_by_ant(self, file_name):
