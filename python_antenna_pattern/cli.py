@@ -140,8 +140,7 @@ class Pyap:
             src_files = [options.target, ]
         else:
             print('Cannot find file or directory {}'.format(options.target))
-            #sys.exit(os.EX_SOFTWARE) # Available only on UNIX platforms.
-            sys.exit(70)
+            sys.exit(70) # os.EX_SOFTWARE available only on UNIX platforms.
 
 
         degree = np.arange(0, 361, 1) # Set indexes 0..360 to draw 359-0
@@ -154,11 +153,9 @@ class Pyap:
         # TODO: syncup cli args and these configs. or at least be able to pass
         # the config file
         clipping = config.MAX_GAIN_CLIPPING
-        loc = config.LOC
         tick_start = config.TICK_START
         tick_stop = config.TICK_STOP
         tick_spacing = config.TICK_SPACING
-        tick_stop_shift = config.TICK_STOP_SHIFT
         line_width = config.LINE_WIDTH
         rlim_shift = config.RLIM_SHIFT
 
@@ -184,8 +181,7 @@ class Pyap:
                 'PYAP currently does not support more than a pair of file',
                 file=sys.stderr
             )
-            #sys.exit(os.EX_SOFTWARE) # Available only on UNIX platforms.
-            sys.exit(70)
+            sys.exit(70) # os.EX_SOFTWARE available only on UNIX platforms.
 
         if len(src_files) < 2:
             self.single_file_flag = True
@@ -197,8 +193,7 @@ class Pyap:
                     'Frequency band not match: {}'.format(band),
                     file=sys.stderr
                 )
-                #sys.exit(os.EX_SOFTWARE) # Available only on UNIX platforms.
-                sys.exit(70)
+                sys.exit(70) # os.EX_SOFTWARE available only on UNIX platforms.
 
         max_gain_db_slist = []
         rho = {}
@@ -334,13 +329,14 @@ class Pyap:
             counter = 0
             # only show every other ticks
             tick_label = []
+            units = 'dBi' if config.ABSOLUTE_FLAG is True else 'dB'
             for x in tick_range:
                 if counter % 2 == 1:
-                    tick_label.append('%1.1f dBi' % x) if config.ABSOLUTE_FLAG is True else tick_label.append('%1.1f dB' % x)
+                    tick_label.append(' %1.1f %s' % (x,units))
                     counter += 1
                 else:
                     if tick_spacing == 1:
-                        tick_label.append('%1.1f dBi' % x) if config.ABSOLUTE_FLAG is True else tick_label.append('%1.1f dB' % x)
+                        tick_label.append(' %1.1f %s' % (x,units))
                     else:
                         tick_label.append('')
                     counter += 1
@@ -348,7 +344,7 @@ class Pyap:
             # show full ticks
             tick_label_full = []
             for x in tick_range:
-                tick_label_full.append('%1.1f dBi' % x) if config.ABSOLUTE_FLAG is True else tick_label_full.append('%1.1f dB' % x)
+                tick_label_full.append(' %1.1f %s' % (x,units))
             ax.set_yticklabels(tick_label_full)
             if save_file:
                 file_path = dir_path[path_counter] + file_format + '/'
