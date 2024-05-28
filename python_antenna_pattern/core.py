@@ -45,7 +45,7 @@ class AntennaPattern():
             (?P<header>[\S]+)   # header name: everything other than white spaces
             \s*                 # white space
             (?P<value>[\S]+)    # value of the header entry
-            *                   # rest of the line
+            (?P<rest>.*)        # rest of the line
         ''', re.VERBOSE)
         # should initialize whenever there's a call to parse_ant_by_*
         self.vertical_flag = False
@@ -57,6 +57,7 @@ class AntennaPattern():
         self.max_gain_db = 0
         self.max_gain_db_str = '0'
         self.frequency = 0
+        self.name = 'Unknown' # Name added by Strang
 
     def parse_line(self, line):
         m = self.header_re_pattern.match(line)
@@ -92,11 +93,18 @@ class AntennaPattern():
         elif m.group('header').lower() == 'frequency':
             self.frequency = int(m.group('value'))
 
+        elif m.group('header').lower() == 'name': # Name added by Strang
+            self.name = m.group('value') + m.group('rest')
+
         elif m.group('header').lower() == 'gain':
             self.max_gain_db = float(m.group('value'))
+            if m.group('rest').lower() == ' dbd':
+                if config.VERBOSE is True:
+                    print('Converting to dBi (+2.14) from', m.group('value') + m.group('rest'))
+                self.max_gain_db += 2.14 # 0 dBd = 2.14 dBi, added by Strang
             # Parse the max gain in string so that tht title can be set accordingly
             # m = header_re_pattern.match(line)
-            self.max_gain_db_str = str(self.max_gain_db)
+            self.max_gain_db_str = str(self.max_gain_db) #m.group('value') + m.group('rest'), added by Strang
 
     def parse_data(self, file_name, parse_by='cut'):
         if parse_by == 'cut':

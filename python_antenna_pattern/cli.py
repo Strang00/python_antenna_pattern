@@ -144,11 +144,13 @@ class Pyap:
             sys.exit(70)
 
 
-        degree = np.arange(0, 361, 1)
+        degree = np.arange(0, 361, 1) # Set indexes 0..360 to draw 359-0
         theta = degree*2*np.pi/360
         p_list = []
         dir_path = []
         band = []
+        name = []
+        gain = []
         # TODO: syncup cli args and these configs. or at least be able to pass
         # the config file
         clipping = config.MAX_GAIN_CLIPPING
@@ -163,7 +165,7 @@ class Pyap:
         for file_path in src_files:
             antenna_pattern = AntennaPattern()
             # parse the antenna gains by cut or by antenna
-            antenna_pattern.parse_data(file_path, config.PARSE_BY)
+            antenna_pattern.parse_data(file_path) # config.PARSE_BY
             split_name = file_path.rsplit('/')
             file_name = split_name[-1]
             print('processing {}'.format(file_name))
@@ -172,6 +174,8 @@ class Pyap:
 
             #b = parse_freq_band(file_name)
             band.append(antenna_pattern.frequency)
+            name.append(antenna_pattern.name)
+            gain.append(antenna_pattern.max_gain_db)
             # all but last element in the list
             dir_path.append('/'.join(split_name[0:-1]) + '/')
 
@@ -221,22 +225,23 @@ class Pyap:
                 if key in rho:
                     rho[key] = np.append(
                         rho[key],
-                        pval.max_gain_db - np.asarray(pval.pattern_dict[key])
+                        pval.max_gain_db - np.asarray(pval.pattern_dict[key]) if config.ABSOLUTE_FLAG is True else -np.asarray(pval.pattern_dict[key])
                     )
                 # initialize rho dictionary as empty lists
                 else:
                     rho[key] = (
-                        pval.max_gain_db - np.asarray(pval.pattern_dict[key])
+                        pval.max_gain_db - np.asarray(pval.pattern_dict[key]) if config.ABSOLUTE_FLAG is True else -np.asarray(pval.pattern_dict[key])
                     )
 
         for key in list(pval.pattern_dict.keys()):
-            max_gain_db = max(rho[key])
+            max_value = max(rho[key]) 
+            max_gain_db = gain[0]
             max_list.append(max_gain_db)
             max_gain_db_str = 'Peak Gain: {:.2f} dBi.'.format(max_gain_db)
             max_gain_db_slist.append(max_gain_db_str)
             fig = plt.figure(figsize=(fontsize, fontsize))
             plot_title = (
-                'Frequency: ' + str(band[0]) + ' MHz. ' + max_gain_db_str
+                'Frequency: ' + str(band[0]) + ' MHz. ' + max_gain_db_str # + ' Name: ' + name[0]  # Name added by Strang
             )
             fig.suptitle(plot_title)
             ax = plt.subplot(111, polar=True, projection='polar')
@@ -274,7 +279,7 @@ class Pyap:
                 temp2 = buf2
 
             if self.single_file_flag is True:
-                temp2 = np.insert(temp2,360,temp2[0])
+                temp2 = np.insert(temp2,360,temp2[0]) # Add first as last to draw 359-0
                 plt.polar(
                     theta,
                     temp2,
@@ -284,8 +289,8 @@ class Pyap:
                     lw=line_width
                 )
             else:
-                temp1 = np.insert(temp1,360,temp1[0])
-                temp2 = np.insert(temp2,360,temp2[0])
+                temp1 = np.insert(temp1,360,temp1[0]) # Add first as last to draw 359-0
+                temp2 = np.insert(temp2,360,temp2[0]) # Add first as last to draw 359-0
                 plt.polar(
                     theta,
                     temp2,
@@ -307,7 +312,7 @@ class Pyap:
             # not working well with python 2.7
             if options.show_legend is True:
                 plt.legend(loc=3)
-            tick_stop = max_gain_db + tick_stop_shift
+            #tick_stop = max_value + tick_stop_shift
             #tick_spacing = max(1, (tick_stop - tick_start)/5)
             tick_range = np.arange(
                 np.floor(tick_start),
@@ -322,11 +327,11 @@ class Pyap:
             tick_label = []
             for x in tick_range:
                 if counter % 2 == 1:
-                    tick_label.append('%1.1f dBi' % x)
+                    tick_label.append('%1.1f dBi' % x) if config.ABSOLUTE_FLAG is True else tick_label.append('%1.1f dB' % x)
                     counter += 1
                 else:
                     if tick_spacing == 1:
-                        tick_label.append('%1.1f dBi' % x)
+                        tick_label.append('%1.1f dBi' % x) if config.ABSOLUTE_FLAG is True else tick_label.append('%1.1f dB' % x)
                     else:
                         tick_label.append('')
                     counter += 1
@@ -334,7 +339,7 @@ class Pyap:
             # show full ticks
             tick_label_full = []
             for x in tick_range:
-                tick_label_full.append('%1.1f dBi' % x)
+                tick_label_full.append('%1.1f dBi' % x) if config.ABSOLUTE_FLAG is True else tick_label_full.append('%1.1f dB' % x)
             ax.set_yticklabels(tick_label_full)
             if save_file:
                 file_path = dir_path[path_counter] + file_format + '/'
