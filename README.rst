@@ -36,6 +36,7 @@ Examples::
 
 Usage
 -----
+::
 
    pyap [-h] [-v] [-s] [-g] [-3] [--show-name] [-r ROTATION_OFFSET]
         [-f {pdf,eps,png}] [-n FILE_NAME_PREFIX] [--fontsize FONTSIZE]
