@@ -56,6 +56,21 @@ class Pyap:
             help='Show legend'
         )
         self.arg_parser.add_argument(
+            '--show-name',
+            action='store_true',
+            dest='show_name',
+            default=False,
+            help='Add NAME attribute to caption'
+        )
+        self.arg_parser.add_argument(
+            '-3',
+            '--show-3db',
+            action='store_true',
+            dest='show_3db',
+            default=False,
+            help='Show half-power line (max - 3dB)'
+        )
+        self.arg_parser.add_argument(
             type=str,
             dest='target',
             help=(
@@ -80,20 +95,26 @@ class Pyap:
             help='File type of the output figure, either pdf or eps or png'
         )
         self.arg_parser.add_argument(
-            '-z',
-            '--fontsize',
-            type=int,
-            dest='fontsize',
-            default=7,
-            help='Font size in the legend and the title'
-        )
-        self.arg_parser.add_argument(
             '-n',
             '--file-name-prefix',
             type=str,
             dest='file_name_prefix',
             default='PYAP_',
             help='Prefix of the generated filename'
+        )
+        self.arg_parser.add_argument(
+            '--fontsize',
+            type=int,
+            dest='fontsize',
+            default=12,
+            help='Font size in the legend and the title'
+        )
+        self.arg_parser.add_argument(
+            '--size',
+            type=int,
+            dest='image_size',
+            default=8,
+            help='Image size in 100px units'
         )
 
 
@@ -122,8 +143,12 @@ class Pyap:
     def plot_pattern(self, options, save_file=True):
 
         fontsize = options.fontsize
+        image_size = options.image_size
         file_name_prefix=options.file_name_prefix
         file_format=options.filetype
+        show_name = options.show_name
+        show_3db = options.show_3db
+        plt.rc('font', size=fontsize)
         if os.path.isdir(options.target):
             src_files = glob.glob(options.directory)
             if len(src_files) == 0:
@@ -232,11 +257,11 @@ class Pyap:
             max_value = max(rho[key]) 
             max_gain_db = gain[0]
             max_list.append(max_gain_db)
-            max_gain_db_str = 'Peak Gain: {:.2f} dBi.'.format(max_gain_db)
+            max_gain_db_str = 'Peak Gain: {:.2f} dBi'.format(max_gain_db)
             max_gain_db_slist.append(max_gain_db_str)
-            fig = plt.figure(figsize=(fontsize, fontsize))
+            fig = plt.figure(figsize=(image_size, image_size))
             plot_title = (
-                'Frequency: ' + str(band[0]) + ' MHz. ' + max_gain_db_str # + ' Name: ' + name[0]  # Name added by Strang
+                ((name[0] + '\n') if show_name else '') + 'Frequency: ' + str(band[0]) + ' MHz. ' + max_gain_db_str
             )
             fig.suptitle(plot_title)
             ax = plt.subplot(111, polar=True, projection='polar')
@@ -245,9 +270,10 @@ class Pyap:
             ax.set_theta_zero_location('N')
             # set the angle to be increasing clockwise or counterclockwise
             ax.set_theta_direction(-1)
-            ax.tick_params(axis='y', which='major', labelsize=10)
+            ax.tick_params(axis='y', which='major')
 
             # long/right antenna is always red, and is always in second file
+            temp0 = np.full(361, max_value-3)
             temp1 = rho[key][360:720]
             temp2 = rho[key][0:360]
             buf1 = [0]*360
@@ -282,6 +308,15 @@ class Pyap:
                 temp1 = buf1
                 temp2 = buf2
 
+            if show_3db is True:
+                plt.polar(
+                    theta,
+                    temp0,
+                    label= 'max -3dB',
+                    color= 'gray',
+                    ls='--',
+                    lw=1
+                )
             if self.single_file_flag is True:
                 temp2 = np.insert(temp2,360,temp2[0]) # Add first as last to draw 359-0
                 plt.polar(
@@ -315,9 +350,7 @@ class Pyap:
 
             # not working well with python 2.7
             if options.show_legend is True:
-                plt.legend(loc=3)
-            #tick_stop = max_value + tick_stop_shift
-            #tick_spacing = max(1, (tick_stop - tick_start)/5)
+                plt.legend(loc='lower left', borderaxespad=-1.5)
             tick_range = np.arange(
                 np.floor(tick_start),
                 np.ceil(tick_stop)+0.1,
