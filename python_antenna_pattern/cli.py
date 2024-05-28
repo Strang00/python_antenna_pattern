@@ -183,6 +183,7 @@ class Pyap:
         tick_spacing = config.TICK_SPACING
         line_width = config.LINE_WIDTH
         rlim_shift = config.RLIM_SHIFT
+        gain_ticks_position = config.TICK_POSITION # good with 45 also
 
         for file_path in src_files:
             antenna_pattern = AntennaPattern()
@@ -270,7 +271,9 @@ class Pyap:
             ax.set_theta_zero_location('N')
             # set the angle to be increasing clockwise or counterclockwise
             ax.set_theta_direction(-1)
-            ax.tick_params(axis='y', which='major')
+            ax.tick_params(axis='y', which='major', labelrotation=-gain_ticks_position)
+            # set ticks position
+            ax.set_rlabel_position(gain_ticks_position)
 
             # long/right antenna is always red, and is always in second file
             temp0 = np.full(361, max_value-3)
