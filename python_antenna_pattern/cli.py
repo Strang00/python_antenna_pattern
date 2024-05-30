@@ -279,13 +279,23 @@ class Pyap:
             # set ticks position
             ax.set_rlabel_position(gain_ticks_position)
 
-            # long/right antenna is always red, and is always in second file
-            temp0 = np.full(361, max_value-3)
+            # in two-file mode long/right antenna is always green, and is always in second file
+            # in one-file mode horisontal/vertical are in blue/red colors
+            temp0 = np.full(361, max_value-3)			
             temp1 = rho[key][360:720]
             temp2 = rho[key][0:360]
             buf1 = [0]*360
             buf2 = [0]*360
 
+            if config.SIMULATE_FLAG is True:
+                self.single_file_flag = False
+                if key == 'horizontal':
+                    temp1 = 15*(1 - np.sin(theta-np.pi/2))-30 #HDNA ~65
+                else:
+                    temp1 = (15*(1-np.sin((theta+(-90-27-5)/180*np.pi)*10))-30) #VDNA ~8
+                    for l in range(0+int(360/10/2), 360-int(360/10/2)):
+                        temp1[l] = -30 if (90 <= l < 270) else (temp1[l]-20)
+			
             # a hack for C250 planet files where the angle is rotated by 90
             # degree
             if key == 'horizontal' and config.C250_FLAG is True:
@@ -325,7 +335,8 @@ class Pyap:
                     lw=1
                 )
             if self.single_file_flag is True:
-                temp2 = np.insert(temp2,360,temp2[0]) # Add first as last to draw 359-0
+                if len(temp2) == 360:
+                    temp2 = np.insert(temp2,360,temp2[0]) # Add first as last to draw 359-0
                 plt.polar(
                     theta,
                     temp2,
@@ -335,8 +346,10 @@ class Pyap:
                     lw=line_width
                 )
             else:
-                temp1 = np.insert(temp1,360,temp1[0]) # Add first as last to draw 359-0
-                temp2 = np.insert(temp2,360,temp2[0]) # Add first as last to draw 359-0
+                if len(temp1) == 360:
+                    temp1 = np.insert(temp1,360,temp1[0]) # Add first as last to draw 359-0
+                if len(temp2) == 360:
+                    temp2 = np.insert(temp2,360,temp2[0]) # Add first as last to draw 359-0
                 plt.polar(
                     theta,
                     temp2,
@@ -349,7 +362,7 @@ class Pyap:
                     theta,
                     temp1,
                     label= key + ' 2', #'Antenna 2',
-                    color='red',
+                    color='green',
                     ls='--',
                     lw=line_width
                 )
