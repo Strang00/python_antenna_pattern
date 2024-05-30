@@ -299,6 +299,39 @@ class Pyap:
             buf1 = [0]*360
             buf2 = [0]*360
 
+            # Measure beam width on level max-3dB
+            if config.MEASURE_WIDTH is True:
+                width1 = np.full(4, -1) # width, left border, value with 0, right border
+                width2 = np.full(4, -1) # width, left border, value with 0, right border
+                prev_value1 = 0
+                prev_value2 = 0
+                for l in range(0, 360):
+                    curr_value1 = -temp1[l] - (max_gain_db if config.ABSOLUTE_FLAG is True else 0)
+                    if (prev_value1 >= 3 and curr_value1 <=3):
+                        width1[1] = l
+                    if (prev_value1 > curr_value1 and curr_value1 < 3):
+                        width1[2] = l
+                    if (prev_value1 <= 3 and curr_value1 >=3):
+                        width1[3] = l
+                    prev_value1 = curr_value1
+                    if (self.single_file_flag is False):
+                        curr_value2 = -temp2[l] - (max_gain_db if config.ABSOLUTE_FLAG is True else 0)
+                        if (prev_value2 >= 3 and curr_value2 <=3):
+                            width2[1] = l
+                        if (prev_value2 > curr_value2 and curr_value2 < 3):
+                            width2[2] = l
+                        if (prev_value2 <= 3 and curr_value2 >=3):
+                            width2[3] = l
+                        prev_value2 = curr_value2
+                if (width1[1] >= 0): 
+                    width1[0] = (width1[3] - width1[1] + 360) %360
+                    print('Antenna 1 width ' + key + ': ' + format(width1[0], ".2f"))
+                    print('Antenna 1 peak  ' + key + ': ' + format(width1[2], ".2f"))
+                if (width2[1] >= 0): 
+                    width2[0] = (width2[3] - width2[1] + 360) %360
+                    print('Antenna 2 width ' + key + ': ' + format(width2[0], ".2f"))
+                    print('Antenna 2 peak  ' + key + ': ' + format(width2[2], ".2f"))
+
             # a hack for C250 planet files where the angle is rotated by 90
             if key == 'horizontal' and config.C250_FLAG is True:
                 rotation_offset = config.C250_ROTATION_OFFSET
@@ -373,7 +406,7 @@ class Pyap:
 
             # not working well with python 2.7
             if options.show_legend is True:
-                plt.legend(loc='lower left', borderaxespad=-1.5)
+                plt.legend(loc='lower left', borderaxespad=-1.8)
             tick_range = np.arange(
                 np.floor(tick_start),
                 np.ceil(tick_stop)+0.1,
