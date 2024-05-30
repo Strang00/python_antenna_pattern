@@ -107,25 +107,52 @@ class AntennaPattern():
             # m = header_re_pattern.match(line)
             self.max_gain_db_str = str(self.max_gain_db) #m.group('value') + m.group('rest'), added by Strang
 
-    def parse_data(self, file_name, parse_by='ant'):
-        #if parse_by == 'cut':
-        #    return self.parse_data_by_cut(file_name)
-        #else:
+    def parse_data(self, file_name):
         return self.parse_data_by_ant(file_name)
 
     def parse_data_by_ant(self, file_name):
         if config.VERBOSE is True:
             print('opening file ', file_name)
     
-        try:
-            with open(file_name, 'r') as fp:
-                self.file = file_name
-                for line in fp:
-                    self.parse_line(line) 
-        except IOError:
-            # try path without the project name 
-            with open(file_name.replace('python_antenna_pattern/', ''), 'r') as fp:
-                for line in fp:
-                    self.parse_line(line) 
+        with open(file_name, 'r') as fp:
+            self.file = file_name
+            for line in fp:
+                self.parse_line(line) 
 
         return True
+
+    def simulate_data(self, gain, band, tilt = 0):
+        theta = np.arange(0, 360, 1)*np.pi/180.0
+        self.name = 'Pattern simulation with beam width 59/7'
+        self.frequency = band
+        self.max_gain_db = gain
+        self.tilt = tilt
+        self.pattern_dict['horizontal'] = (-15*(1 - np.sin(theta-np.pi/2))+30)*1.5
+        self.pattern_dict['vertical'] = (-15*(1-np.sin((theta+(-90-27-tilt)/180*np.pi)*10))+30)*1.0
+        for l in range(int(360/10/2+tilt), 360-int(360/10/2-tilt)):
+            self.pattern_dict['vertical'][l] = 50 if (90+tilt <= l < 270+tilt) else (self.pattern_dict['vertical'][l]+20)
+        return True
+
+    def save_data(self, file_name):
+        #if config.VERBOSE is True:
+        print('saving file ', file_name)
+    
+        with open(file_name, 'w') as fp:
+            self.file = file_name
+            fp.write("NAME " + self.name + "\n")
+            fp.write("FREQUENCY " + str(self.frequency) + "\n")
+            fp.write("GAIN " + str(self.max_gain_db) + " dBi\n")
+            fp.write("COMMENT {:02d}T degree downtilt\n".format(self.tilt))
+            counter = 0
+            fp.write("HORIZONTAL 360\n")
+            for val in self.pattern_dict['horizontal']:
+                fp.write(str(counter) + " {:.2f}\n".format(val))
+                counter += 1
+            counter = 0
+            fp.write("VERTICAL 360\n")
+            for val in self.pattern_dict['vertical']:
+                fp.write(str(counter) + " {:.2f}\n".format(val))
+                counter += 1
+
+        return True
+

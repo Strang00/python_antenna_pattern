@@ -167,13 +167,14 @@ class Pyap:
             sys.exit(70) # os.EX_SOFTWARE available only on UNIX platforms.
 
 
-        degree = np.arange(0, 361, 1) # Set indexes 0..360 to draw 359-0
+        degree = np.arange(0, 360, 1)
         theta = degree*2*np.pi/360
         p_list = []
         dir_path = []
         band = []
         name = []
         gain = []
+        file_path = ''
         # TODO: syncup cli args and these configs. or at least be able to pass
         # the config file
         clipping = config.MAX_GAIN_CLIPPING
@@ -190,9 +191,6 @@ class Pyap:
                 file=sys.stderr
             )
             sys.exit(70) # os.EX_SOFTWARE available only on UNIX platforms.
-
-        if len(src_files) < 2:
-            self.single_file_flag = True
 
         for file_path_original in src_files:
             file_path = file_path_original.replace('\\', '/')
@@ -212,6 +210,23 @@ class Pyap:
             # all but last element in the list
             dir_path.append('/'.join(split_name[0:-1]) + '/')
 
+            #Simulate pattern ~69/7
+            if config.SIMULATE_FLAG is True: 
+                band.append(antenna_pattern.frequency)
+                name.append(antenna_pattern.name)
+                gain.append(antenna_pattern.max_gain_db)
+                antenna_pattern = AntennaPattern()
+                antenna_pattern.simulate_data(gain[-1], band[-1], int(config.SIMULATE_TILT))
+                print('simulatig source')
+                p_list.append(antenna_pattern)
+                if config.SIMULATE_SAVE is True:
+                    # + os.path.splitext(os.path.basename(file_path))[0]
+                    file_name_save = dir_path[0] + file_name_prefix  + "simulated_" + format(int(config.SIMULATE_TILT),'02d') + "T.msi"
+                    antenna_pattern.save_data(file_name_save)
+
+        if len(p_list) < 2:
+            self.single_file_flag = True
+
         if len(band) > 1:
             print('Frequency band list: {}'.format(band), file=sys.stderr)
             if band[0] != band[1]:
@@ -221,13 +236,11 @@ class Pyap:
                 )
                 sys.exit(70) # os.EX_SOFTWARE available only on UNIX platforms.
 
-        max_gain_db_slist = []
         rho = {}
         counter = 0
         max_list = []
 
         for pval in p_list:
-
             if len(pval.pattern_dict.keys()) != 2:
                 print('Invalid antenna pattern was loaded from ' + pval.file, file=sys.stderr)
                 sys.exit(70) # os.EX_SOFTWARE available only on UNIX platforms.
@@ -243,7 +256,7 @@ class Pyap:
 
             # the vertical/horizontal antenna patterns across two files, i.e.,
             # two antennas, are aggregated here the way we aggregate is that
-            # the vertial antenna pattern for the first file, is in rho[0:360]
+            # the vertical antenna pattern for the first file, is in rho[0:360]
             # and the antenna pattern for the second file is in rho[360:720],
             # and so on. Number of antenna to consider
             for key in list(pval.pattern_dict.keys()):
@@ -263,7 +276,6 @@ class Pyap:
             max_gain_db = gain[0]
             max_list.append(max_gain_db)
             max_gain_db_str = 'Peak Gain: {:.2f} dBi'.format(max_gain_db)
-            max_gain_db_slist.append(max_gain_db_str)
             fig = plt.figure(figsize=(imagesize, imagesize))
             plot_title = (
                 ((name[0] + '\n') if show_name else '') + 'Frequency: ' + str(band[0]) + ' MHz. ' + max_gain_db_str
@@ -279,90 +291,81 @@ class Pyap:
             # set ticks position
             ax.set_rlabel_position(gain_ticks_position)
 
-            # in two-file mode long/right antenna is always green, and is always in second file
+            # in two-file mode long/right antenna is always red, and is always in second file
             # in one-file mode horisontal/vertical are in blue/red colors
-            temp0 = np.full(361, max_value-3)			
-            temp1 = rho[key][360:720]
-            temp2 = rho[key][0:360]
+            temp0 = np.full(360, max_value-3)			
+            temp1 = rho[key][0:360]
+            temp2 = rho[key][360:720]
             buf1 = [0]*360
             buf2 = [0]*360
 
-            if config.SIMULATE_FLAG is True:
-                self.single_file_flag = False
-                if key == 'horizontal':
-                    temp1 = 15*(1 - np.sin(theta-np.pi/2))-30 #HDNA ~65
-                else:
-                    temp1 = (15*(1-np.sin((theta+(-90-27-5)/180*np.pi)*10))-30) #VDNA ~8
-                    for l in range(0+int(360/10/2), 360-int(360/10/2)):
-                        temp1[l] = -30 if (90 <= l < 270) else (temp1[l]-20)
-			
             # a hack for C250 planet files where the angle is rotated by 90
-            # degree
             if key == 'horizontal' and config.C250_FLAG is True:
                 rotation_offset = config.C250_ROTATION_OFFSET
                 for l in range(0, 360):
-                    buf2[(l + rotation_offset) % 360] = temp2[l]
+                    buf1[(l + rotation_offset) % 360] = temp1[l]
                     if self.single_file_flag is False:
-                        buf1[(l + rotation_offset) % 360] = temp1[l]
+                        buf2[(l + rotation_offset) % 360] = temp2[l]
                 temp1 = buf1
                 temp2 = buf2
 
             if key == 'vertical' and config.MSIV_FLAG is True:
                 rotation_offset = config.MSIV_ROTATION_OFFSET
                 for l in range(0, 360):
-                    buf2[(l + rotation_offset) % 360] = temp2[l]
+                    buf1[(l + rotation_offset) % 360] = temp1[l]
                     if self.single_file_flag is False:
-                        buf1[(l + rotation_offset) % 360] = temp1[l]
+                        buf2[(l + rotation_offset) % 360] = temp2[l]
                 temp1 = buf1
                 temp2 = buf2
 
             if options.rotation_offset > 0:
                 rotation_offset = options.rotation_offset
                 for l in range(0, 360):
-                    buf2[(l + rotation_offset) % 360] = temp2[l]
+                    buf1[(l + rotation_offset) % 360] = temp1[l]
                     if self.single_file_flag is False:
-                        buf1[(l + rotation_offset) % 360] = temp1[l]
+                        buf2[(l + rotation_offset) % 360] = temp2[l]
                 temp1 = buf1
                 temp2 = buf2
 
+			# Add first as last to draw 359-0
+            thet0 = np.insert(theta,360,theta[0])    
+            temp1 = np.insert(temp1,360,temp1[0])
+            if self.single_file_flag is False:
+                temp2 = np.insert(temp2,360,temp2[0])
+
             if show_3db is True:
+                temp0 = np.insert(temp0,360,temp0[0])
                 plt.polar(
-                    theta,
+                    thet0,
                     temp0,
                     label= 'max -3dB',
                     color= 'gray',
                     ls='--',
                     lw=1
-                )
+                )								
             if self.single_file_flag is True:
-                if len(temp2) == 360:
-                    temp2 = np.insert(temp2,360,temp2[0]) # Add first as last to draw 359-0
                 plt.polar(
-                    theta,
-                    temp2,
+                    thet0,
+                    temp1,
                     label=key, #'Antenna 1',
                     color= 'blue' if key == 'horizontal' else 'red',
                     ls='-',
                     lw=line_width
                 )
             else:
-                if len(temp1) == 360:
-                    temp1 = np.insert(temp1,360,temp1[0]) # Add first as last to draw 359-0
-                if len(temp2) == 360:
-                    temp2 = np.insert(temp2,360,temp2[0]) # Add first as last to draw 359-0
                 plt.polar(
-                    theta,
-                    temp2,
+                    thet0,
+                    temp1,
                     label= key + ' 1', #'Antenna 1',
                     color='blue',
                     ls='-',
                     lw=line_width
                 )
                 plt.polar(
-                    theta,
-                    temp1,
+                    thet0,
+                    temp2,
                     label= key + ' 2', #'Antenna 2',
-                    color='green',
+                    color='red',
                     ls='--',
                     lw=line_width
                 )
@@ -406,8 +409,7 @@ class Pyap:
                     os.makedirs(file_path_save)
 
                 output_name = (
-                    dir_path[0] + file_format + '/' + file_name_prefix
-                    + file_name_body + '_' + key + '.' + file_format
+                    file_path_save + file_name_prefix + file_name_body + '_' + key + '.' + file_format
                 )
                 plt.savefig(output_name, format=file_format)
                 print(
