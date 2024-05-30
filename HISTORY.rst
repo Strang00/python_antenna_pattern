@@ -12,6 +12,7 @@ History
 ------------------
 
 * New multiplatform release with bugfixes and improvements.
+* Added support for MS Windows (unsupported enums replaced).
 * Added PNG output filtype and input MSI example.
 * Added type of pattern horizontal or vertical to the legend.
 * Vertical pattern drawn in red as used in HUAWEI datasheets.
@@ -25,3 +26,13 @@ History
 * Added TICK_POSITION to control dB ticks position and rotation angle.
 * Added option --size and changed --fontsize usage, updated defaults.
 * Added option --show-3db to draw half-power level, updated legend position.
+
+
+1.0.1 (2024-05-30)
+------------------
+
+* Added beam width measurement, printed to console when --show-3db used.
+* Added SIMULATE_FLAG param to add simulated pattern 60/08 as antenna 2.
+* Added SIMULATE_TILT param to define tilt for simulated antenna pattern.
+* Added SIMULATE_SAVE param for saving simulation results to MSI file.
+* Added COLOR_* params for configuring colors without changes in code.

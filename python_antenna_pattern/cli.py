@@ -175,6 +175,7 @@ class Pyap:
         name = []
         gain = []
         file_path = ''
+
         # TODO: syncup cli args and these configs. or at least be able to pass
         # the config file
         clipping = config.MAX_GAIN_CLIPPING
@@ -215,13 +216,15 @@ class Pyap:
                 band.append(antenna_pattern.frequency)
                 name.append(antenna_pattern.name)
                 gain.append(antenna_pattern.max_gain_db)
+                tilt = int(config.SIMULATE_TILT)
                 antenna_pattern = AntennaPattern()
-                antenna_pattern.simulate_data(gain[-1], band[-1], int(config.SIMULATE_TILT))
+                antenna_pattern.simulate_data(gain[-1], band[-1], tilt)
                 print('simulatig source')
                 p_list.append(antenna_pattern)
                 if config.SIMULATE_SAVE is True:
                     # + os.path.splitext(os.path.basename(file_path))[0]
-                    file_name_save = dir_path[0] + file_name_prefix  + "simulated_" + format(int(config.SIMULATE_TILT),'02d') + "T.msi"
+                    file_name_save = (dir_path[0] + file_name_prefix 
+                    + "simulated_" + format(tilt,'02d') + "T.msi")
                     antenna_pattern.save_data(file_name_save)
 
         if len(p_list) < 2:
@@ -300,26 +303,30 @@ class Pyap:
             buf2 = [0]*360
 
             # Measure beam width on level max-3dB
-            if config.MEASURE_WIDTH is True:
+            if show_3db is True:
                 width1 = np.full(4, -1) # width, left border, value with 0, right border
                 width2 = np.full(4, -1) # width, left border, value with 0, right border
                 prev_value1 = 0
                 prev_value2 = 0
+                peak_value1 = 30
+                peak_value2 = 30
                 for l in range(0, 360):
                     curr_value1 = -temp1[l] - (max_gain_db if config.ABSOLUTE_FLAG is True else 0)
-                    if (prev_value1 >= 3 and curr_value1 <=3):
+                    if (prev_value1 > 3 and curr_value1 <=3):
                         width1[1] = l
-                    if (prev_value1 > curr_value1 and curr_value1 < 3):
+                    if (prev_value1 > curr_value1 and curr_value1 < 3 and curr_value1 < peak_value1):
                         width1[2] = l
-                    if (prev_value1 <= 3 and curr_value1 >=3):
+                        peak_value1 = curr_value1
+                    if (prev_value1 < 3 and curr_value1 >=3):
                         width1[3] = l
                     prev_value1 = curr_value1
                     if (self.single_file_flag is False):
                         curr_value2 = -temp2[l] - (max_gain_db if config.ABSOLUTE_FLAG is True else 0)
                         if (prev_value2 >= 3 and curr_value2 <=3):
                             width2[1] = l
-                        if (prev_value2 > curr_value2 and curr_value2 < 3):
+                        if (prev_value2 > curr_value2 and curr_value2 < 3 and curr_value2 < peak_value2):
                             width2[2] = l
+                            peak_value2 = curr_value2
                         if (prev_value2 <= 3 and curr_value2 >=3):
                             width2[3] = l
                         prev_value2 = curr_value2
@@ -327,10 +334,14 @@ class Pyap:
                     width1[0] = (width1[3] - width1[1] + 360) %360
                     print('Antenna 1 width ' + key + ': ' + format(width1[0], ".2f"))
                     print('Antenna 1 peak  ' + key + ': ' + format(width1[2], ".2f"))
+                if (peak_value1 > 0): 
+                    print('Antenna 1 max   ' + key + ': ' + format(peak_value1, ".2f") + " above zero")
                 if (width2[1] >= 0): 
                     width2[0] = (width2[3] - width2[1] + 360) %360
                     print('Antenna 2 width ' + key + ': ' + format(width2[0], ".2f"))
                     print('Antenna 2 peak  ' + key + ': ' + format(width2[2], ".2f"))
+                if (peak_value2 > 0): 
+                    print('Antenna 2 max   ' + key + ': ' + format(peak_value2, ".2f") + " above zero")
 
             # a hack for C250 planet files where the angle is rotated by 90
             if key == 'horizontal' and config.C250_FLAG is True:
@@ -372,35 +383,35 @@ class Pyap:
                     thet0,
                     temp0,
                     label= 'max -3dB',
-                    color= 'gray',
-                    ls='--',
-                    lw=1
+                    color= config.COLOR_3DB,
+                    ls= '--',
+                    lw= 1
                 )								
             if self.single_file_flag is True:
                 plt.polar(
                     thet0,
                     temp1,
-                    label=key, #'Antenna 1',
-                    color= 'blue' if key == 'horizontal' else 'red',
-                    ls='-',
-                    lw=line_width
+                    label= key, #'Antenna 1',
+                    color= config.COLOR_HOR if key == 'horizontal' else config.COLOR_VER,
+                    ls= '-',
+                    lw= line_width
                 )
             else:
                 plt.polar(
                     thet0,
                     temp1,
                     label= key + ' 1', #'Antenna 1',
-                    color='blue',
-                    ls='-',
-                    lw=line_width
+                    color= config.COLOR_2A1,
+                    ls= '-',
+                    lw= line_width
                 )
                 plt.polar(
                     thet0,
                     temp2,
                     label= key + ' 2', #'Antenna 2',
-                    color='red',
-                    ls='--',
-                    lw=line_width
+                    color= config.COLOR_2A2,
+                    ls= '--',
+                    lw= line_width
                 )
                 # short/left is always blue
 

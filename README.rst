@@ -52,9 +52,9 @@ Usage
                            (default: False)
      -s, --show-fig        show figure, pause after each figure is generated
                            (default: False)
-     -g, --show-legend     show legend (default: False)
-     -3, --show-3db        show half-power line (max - 3dB) (default: False)
-     --show-name           show NAME attribute in caption (default: False)
+     -g, --show-legend     draw legend (default: False)
+     -3, --show-3db        draw half-power line (max - 3dB) (default: False)
+     --show-name           draw NAME attribute in caption (default: False)
      -r ROTATION_OFFSET, --rotation-offset ROTATION_OFFSET
                            rotational offset when plotting the polar pattern
                            (default: 0)

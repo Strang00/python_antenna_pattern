@@ -127,8 +127,8 @@ class AntennaPattern():
         self.frequency = band
         self.max_gain_db = gain
         self.tilt = tilt
-        self.pattern_dict['horizontal'] = (-15*(1 - np.sin(theta-np.pi/2))+30)*1.5
-        self.pattern_dict['vertical'] = (-15*(1-np.sin((theta+(-90-27-tilt)/180*np.pi)*10))+30)*1.0
+        self.pattern_dict['horizontal'] = np.round((-15*(1 - np.sin(theta-np.pi/2))+30)*1.5, 2)
+        self.pattern_dict['vertical'] = np.round((-15*(1-np.sin((theta+(-90-27-tilt)/180*np.pi)*10))+30)*1.0, 2)
         for l in range(int(360/10/2+tilt), 360-int(360/10/2-tilt)):
             self.pattern_dict['vertical'][l] = 50 if (90+tilt <= l < 270+tilt) else (self.pattern_dict['vertical'][l]+20)
         return True
