@@ -64,6 +64,14 @@ class Pyap:
             help='show half-power line (max - 3dB)'
         )
         self.arg_parser.add_argument(
+            '-m',
+            '--merge',
+            action='store_true',
+            dest='merge',
+            default=False,
+            help='merge multiple sources to one pattern'
+        )
+        self.arg_parser.add_argument(
             '--show-name',
             action='store_true',
             dest='show_name',
@@ -147,6 +155,7 @@ class Pyap:
         file_format = options.filetype
         show_name = options.show_name
         show_3db = options.show_3db
+        merge_src = options.merge
         plt.rc('font', size=fontsize)
         if not os.path.isfile(options.pattern):
             src_files = glob.glob(options.pattern)
@@ -186,7 +195,7 @@ class Pyap:
         rlim_shift = config.RLIM_SHIFT
         gain_ticks_position = config.TICK_POSITION # good with 45 also
 
-        if len(src_files) > 2:
+        if merge_src is False and len(src_files) > 2:
             print(
                 'PYAP currently does not support more than a pair of files at once',
                 file=sys.stderr
@@ -195,9 +204,21 @@ class Pyap:
 
         for file_path_original in src_files:
             file_path = file_path_original.replace('\\', '/')
+
+            if (merge_src is True and len(p_list) >= 1):
+                print('merging {}'.format(file_path))
+                antenna_pattern2 = AntennaPattern()
+                antenna_pattern2.parse_data(file_path)
+                p_list[-1].merge_from(antenna_pattern2)
+                band[-1] = p_list[-1].frequency
+                gain[-1] = p_list[-1].max_gain_db
+                name[-1] = p_list[-1].name + ' MERGED'
+                continue
+                
             antenna_pattern = AntennaPattern()
             # parse the antenna gains by cut or by antenna
             antenna_pattern.parse_data(file_path) # config.PARSE_BY
+                
             split_name = file_path.rsplit('/')
             file_name = split_name[-1]
             print('processing {}'.format(file_name))
@@ -206,8 +227,8 @@ class Pyap:
 
             #b = parse_freq_band(file_name)
             band.append(antenna_pattern.frequency)
-            name.append(antenna_pattern.name)
             gain.append(antenna_pattern.max_gain_db)
+            name.append(antenna_pattern.name)
             # all but last element in the list
             dir_path.append('/'.join(split_name[0:-1]) + '/')
 
@@ -226,6 +247,12 @@ class Pyap:
                     file_name_save = (dir_path[0] + file_name_prefix 
                     + "simulated_" + format(tilt,'02d') + "T.msi")
                     antenna_pattern.save_data(file_name_save)
+
+        if (merge_src is True and len(p_list) >= 1):
+            if config.MERGE_SAVE is True:
+                #file_name_body = os.path.splitext(os.path.basename(file_path))[0]
+                file_name_save = (dir_path[0] + file_name_prefix + "merged_" + format(antenna_pattern.tilt,'02d') + "T.msi")
+                antenna_pattern.save_data(file_name_save)
 
         if len(p_list) < 2:
             self.single_file_flag = True
@@ -296,7 +323,7 @@ class Pyap:
 
             # in two-file mode long/right antenna is always red, and is always in second file
             # in one-file mode horisontal/vertical are in blue/red colors
-            temp0 = np.full(360, max_value-3)			
+            temp0 = np.full(360, max_value-3)           
             temp1 = rho[key][0:360]
             temp2 = rho[key][360:720]
             buf1 = [0]*360
@@ -371,7 +398,7 @@ class Pyap:
                 temp1 = buf1
                 temp2 = buf2
 
-			# Add first as last to draw 359-0
+            # Add first as last to draw 359-0
             thet0 = np.insert(theta,360,theta[0])    
             temp1 = np.insert(temp1,360,temp1[0])
             if self.single_file_flag is False:
@@ -386,7 +413,7 @@ class Pyap:
                     color= config.COLOR_3DB,
                     ls= '--',
                     lw= 1
-                )								
+                )                               
             if self.single_file_flag is True:
                 plt.polar(
                     thet0,

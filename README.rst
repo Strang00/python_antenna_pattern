@@ -14,13 +14,16 @@ Features
 --------
 
 Simple cli to 
- * generate pdf, eps or png files from a planet pattern file
- * use individual file pattern file or all files by mask (2 only now)
+ * generate pdf, eps or png files from a planet pattern files
+ * use individual file pattern file or several files by mask
+ * simulate pattern habing 59/7 width and optionally save MSI
+ * merge multiple patterns to one and optionally save MSI
 
 
 Examples::
 
    python pyap -g -3 -f png -n TEST_ ./data/AMB4520R8v06_05T.msi
+   python pyap -g -m -f png -n TEST_ "./data/AMB4520R8v06_18*.*"
    python pyap -g -n TEST_ ./data/LTE-L_1960MHz_P1.txt  
    python pyap -g -n TEST_ "./data/*.txt" 
 
@@ -38,7 +41,7 @@ Usage
 -----
 ::
 
-   pyap [-h] [-v] [-s] [-g] [-3] [--show-name] [-r ROTATION_OFFSET]
+   pyap [-h] [-v] [-s] [-g] [-3] [-m] [--show-name] [-r ROTATION_OFFSET]
         [-f {pdf,eps,png}] [-n FILE_NAME_PREFIX] [--fontsize FONTSIZE]
         [--size IMAGE_SIZE_X100PX]
         target_pattern_file
@@ -54,6 +57,7 @@ Usage
                            (default: False)
      -g, --show-legend     draw legend (default: False)
      -3, --show-3db        draw half-power line (max - 3dB) (default: False)
+     -m, --merge           merge multiple sources to one pattern (default: False)
      --show-name           draw NAME attribute in caption (default: False)
      -r ROTATION_OFFSET, --rotation-offset ROTATION_OFFSET
                            rotational offset when plotting the polar pattern

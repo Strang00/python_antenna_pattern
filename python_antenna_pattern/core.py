@@ -47,6 +47,9 @@ class AntennaPattern():
             (?P<value>[\S]+)    # value of the header entry
             (?P<rest>.*)        # rest of the line
         ''', re.VERBOSE)
+        self.tilt_re_pattern = re.compile(r'''
+            .*_([Tt](?P<value1>\d\d)|(?P<value2>\d\d)D?[Tt])[._].*
+        ''', re.VERBOSE)
         # should initialize whenever there's a call to parse_ant_by_*
         self.vertical_flag = False
         self.horizontal_flag = False
@@ -59,6 +62,8 @@ class AntennaPattern():
         self.frequency = 0
         self.name = 'Unknown' # Name added by Strang
         self.file = 'Unknown' # File added by Strang
+        self.tilt = 0
+        self.merged_files = []
 
     def parse_line(self, line):
         m = self.header_re_pattern.match(line)
@@ -94,6 +99,13 @@ class AntennaPattern():
         elif m.group('header').lower() == 'frequency':
             self.frequency = int(m.group('value'))
 
+        elif m.group('header').lower() == 'electrical_tilt':
+            old_tilt = self.tilt
+            self.tilt = int(m.group('value'))
+            if (old_tilt != self.tilt and old_tilt != 0):
+            #if config.VERBOSE is True:
+                print("Updated tilt {tilt1} to electrical_tilt {tilt2} in {file}".format(tilt1 = old_tilt, tilt2 = self.tilt, file=self.file))
+
         elif m.group('header').lower() == 'name': # Name added by Strang
             self.name = m.group('value') + m.group('rest')
 
@@ -116,6 +128,11 @@ class AntennaPattern():
     
         with open(file_name, 'r') as fp:
             self.file = file_name
+            m = self.tilt_re_pattern.match(file_name)
+            if (m is not None):
+                self.tilt = int((m.group("value1") if m.group("value1") else '') + (m.group("value2") if m.group("value2") else ''))
+                if config.VERBOSE is True:
+                    print("Parsed tilt {tilt} from {file}".format(tilt = self.tilt, file=self.file))
             for line in fp:
                 self.parse_line(line) 
 
@@ -141,7 +158,7 @@ class AntennaPattern():
             self.file = file_name
             fp.write("NAME " + self.name + "\n")
             fp.write("FREQUENCY " + str(self.frequency) + "\n")
-            fp.write("GAIN " + str(self.max_gain_db) + " dBi\n")
+            fp.write("GAIN " + "{:.2f}".format(self.max_gain_db) + " dBi\n")
             fp.write("COMMENT {:02d}T degree downtilt\n".format(self.tilt))
             counter = 0
             fp.write("HORIZONTAL 360\n")
@@ -156,3 +173,39 @@ class AntennaPattern():
 
         return True
 
+    # Merge pointed antenna pattern to self using simple mininum for loss values (best signal)
+    def merge_from(self, ant2):
+        if (ant2 is None):
+            return False
+        if (self.frequency != ant2.frequency):
+            print('Antenna merge skipped from {file2} to {file1}: different FREQUENCY'
+                  .format(file1=self.file, file2=ant2.file))
+            return False
+        if (self.tilt != ant2.tilt):
+            print('Antenna merge skipped from {file2} to {file1}: different TILT {tilt2} and {tilt1}'
+                  .format(file1=self.file, file2=ant2.file, tilt2=ant2.tilt, tilt1=self.tilt))
+        if (self.file == ant2.file):
+            print('Antenna merge skipped from {file2} to {file1}: same file'
+                  .format(file1=self.file, file2=ant2.file))
+            return False
+        if (ant2.file in self.merged_files):
+            print('Antenna merge skipped from {file2} to {file1}: already merged'
+                  .format(file1=self.file, file2=ant2.file))
+            return False
+
+        g_self = 0
+        g_ant2 = 0
+        if (self.max_gain_db != ant2.max_gain_db):
+            if (self.max_gain_db < ant2.max_gain_db):
+                g_self = ant2.max_gain_db - self.max_gain_db
+                self.max_gain_db = ant2.max_gain_db
+            else:
+                g_ant2 = self.max_gain_db - ant2.max_gain_db
+            
+        for i in range(360):
+            self.rho_h[i] = min(self.rho_h[i] + g_self, ant2.rho_h[i] + g_ant2)
+            self.rho_v[i] = min(self.rho_v[i] + g_self, ant2.rho_v[i] + g_ant2)
+        self.merged_files.append(ant2.file)
+        
+        return True
+        

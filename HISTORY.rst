@@ -36,3 +36,12 @@ History
 * Added SIMULATE_TILT param to define tilt for simulated antenna pattern.
 * Added SIMULATE_SAVE param for saving simulation results to MSI file.
 * Added COLOR_* params for configuring colors without changes in code.
+
+
+1.0.2 (2024-06-04)
+------------------
+
+* Added --merge option to merge multiple files to one pattern with min loss.
+* Added MERGE_SAVE param to save merged file when --merge option used.
+* Bugfix GAIN write to have .2f format (floating points sometimes kidding).
+* Extend tilt read from rare optional header ELECTRIC_TILT and from filename.
