@@ -30,18 +30,12 @@ Examples::
    python pyap -g -n TEST_ "./data/*.txt" 
 
 
-.. image:: data/png/TEST_AMB4520R8v06_05T_horizontal.png
+.. figure:: data/png/TEST_AMB4520R8v06_05T_horizontal.png
    :height: 400
    :width: 400
    :alt: Horizontal pattern for AMB4520R8v06_05T
 
-.. image:: data/png/TEST_AMB4520R8v06_05T_vertical.png
-   :align: right
-   :height: 400
-   :width: 400
-   :alt: Vertical pattern for AMB4520R8v06_05T
-
-   Horizontal and vertical diagram generated for AMB4520R8v06_05T.msi
+   Horizontal antenna pattern generated for AMB4520R8v06_05T.msi
 
 
 Usage
