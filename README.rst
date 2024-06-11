@@ -7,7 +7,9 @@ Generate antenna radiation pattern in polar coordinates using python.
 
 
 * Free software: Apache Software License 2.0
-* Documentation: https://python-antenna-pattern.readthedocs.io.
+* See also pafx2msi_: Antenna pattern convertor from PAFX to MSI format.
+
+.. _pafx2msi: https://github.com/Strang00/pafx2msi
 
 
 Features
@@ -16,7 +18,7 @@ Features
 Simple cli to 
  * generate pdf, eps or png files from a planet pattern files
  * use individual file pattern file or several files by mask
- * simulate pattern habing 59/7 width and optionally save MSI
+ * simulate pattern having 59/7 width and optionally save MSI
  * merge multiple patterns to one and optionally save MSI
 
 
@@ -31,10 +33,9 @@ Examples::
 .. figure:: data/png/TEST_AMB4520R8v06_05T_horizontal.png
    :height: 400
    :width: 400
-   :alt: Horizontal pattern
+   :alt: Horizontal pattern for AMB4520R8v06_05T
 
-   Horizontal pattern generated for AMB4520R8v06_05T.msi
-
+   Horizontal antenna pattern generated for AMB4520R8v06_05T.msi
 
 
 Usage
@@ -43,7 +44,7 @@ Usage
 
    pyap [-h] [-v] [-s] [-g] [-3] [-m] [--show-name] [-r ROTATION_OFFSET]
         [-f {pdf,eps,png}] [-n FILE_NAME_PREFIX] [--fontsize FONTSIZE]
-        [--size IMAGE_SIZE_X100PX]
+        [--size IMAGE_SIZE]
         target_pattern_file
 
    positional arguments:

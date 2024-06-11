@@ -45,3 +45,14 @@ History
 * Added MERGE_SAVE param to save merged file when --merge option used.
 * Bugfix GAIN write to have .2f format (floating points sometimes kidding).
 * Extend tilt read from rare optional header ELECTRIC_TILT and from filename.
+
+
+1.0.3 (2024-06-11)
+------------------
+
+* Fixed frequency reading for float value rare case (but still used as int).
+* Added comments with TODO and refernce link to simulate method: `sin(x)/x`.
+* Added ELECTRIC_TILT field to saved MSI files.
+* Added reference to pafx2msi_ and vice versa.
+
+.. _pafx2msi: https://github.com/Strang00/pafx2msi

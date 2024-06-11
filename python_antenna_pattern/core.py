@@ -97,7 +97,7 @@ class AntennaPattern():
             self.horizontal_flag = False
 
         elif m.group('header').lower() == 'frequency':
-            self.frequency = int(m.group('value'))
+            self.frequency = int(float(m.group('value')))
 
         elif m.group('header').lower() == 'electrical_tilt':
             old_tilt = self.tilt
@@ -138,6 +138,10 @@ class AntennaPattern():
 
         return True
 
+    # Simulate radiation pattern 59/7 with cardioida
+    # TODO: extend pattern generation with passing target width
+    # See Numerical modeling of antenna radiation patterns with a sin(x)/x function at
+    # https://people.eecs.ku.edu/~callen58/725/Numerical_modeling_of_antenna_radiation_patterns.pdf
     def simulate_data(self, gain, band, tilt = 0):
         theta = np.arange(0, 360, 1)*np.pi/180.0
         self.name = 'Pattern simulation with beam width 59/7'
@@ -159,6 +163,7 @@ class AntennaPattern():
             fp.write("NAME " + self.name + "\n")
             fp.write("FREQUENCY " + str(self.frequency) + "\n")
             fp.write("GAIN " + "{:.2f}".format(self.max_gain_db) + " dBi\n")
+            fp.write("ELECTRICAL_TILT {:02d}\n".format(self.tilt))
             fp.write("COMMENT {:02d}T degree downtilt\n".format(self.tilt))
             counter = 0
             fp.write("HORIZONTAL 360\n")
