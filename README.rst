@@ -35,7 +35,15 @@ Examples::
    :width: 400
    :alt: Horizontal pattern for AMB4520R8v06_05T
 
-   Horizontal antenna pattern generated for AMB4520R8v06_05T.msi
+   Horizontal diagram generated for AMB4520R8v06_05T.msi
+
+.. figure:: data/png/TEST_AMB4520R8v06_05T_vertical.png
+   :align: right
+   :height: 400
+   :width: 400
+   :alt: Vertical pattern for AMB4520R8v06_05T
+
+   Vertical diagram generated for AMB4520R8v06_05T.msi
 
 
 Usage
