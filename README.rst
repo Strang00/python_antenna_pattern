@@ -20,56 +20,67 @@ Simple cli to
  * use individual file pattern file or several files by mask
  * simulate pattern having 59/7 width and optionally save MSI
  * merge multiple patterns to one and optionally save MSI
+ * rotate horizontally or vertically and optionally save MSI
 
 
 Examples::
 
-   python pyap -g -3 -f png -n TEST_ ./data/AMB4520R8v06_05T.msi
-   python pyap -g -m -f png -n TEST_ "./data/AMB4520R8v06_18*.*"
-   python pyap -g -n TEST_ ./data/LTE-L_1960MHz_P1.txt  
-   python pyap -g -n TEST_ "./data/*.txt" 
+   python pyap -l -3 -t png -p TEST_ -c ./data/AMB4520R8v06_05T.msi
+   python pyap -l -m -t png -p TEST_ -n "./data/AMB4520R8v06_18*.*"
+   python pyap -l -p TEST_ ./data/LTE-L_1960MHz_P1.txt  
+   python pyap -l -p TEST_ "./data/*.txt" 
 
 
-.. figure:: data/png/TEST_AMB4520R8v06_05T_horizontal.png
+.. figure:: data/png/TEST_AMB4520R8v06_05T.png
    :height: 400
    :width: 400
-   :alt: Horizontal pattern for AMB4520R8v06_05T
+   :alt: Pattern plotted for AMB4520R8v06_05T
 
-   Horizontal antenna pattern generated for AMB4520R8v06_05T.msi
+   Antenna pattern plotted for AMB4520R8v06_05T
 
 
 Usage
 -----
 ::
 
-   pyap [-h] [-v] [-s] [-g] [-3] [-m] [--show-name] [-r ROTATION_OFFSET]
-        [-f {pdf,eps,png}] [-n FILE_NAME_PREFIX] [--fontsize FONTSIZE]
-        [--size IMAGE_SIZE]
-        target_pattern_file
+    pyap [-h] [-v] [-i] [-l] [-3] [-m] [-c] [-w] [-n] [-t {pdf,eps,png}]
+         [-p FILE_PREFIX] [-rh ROTATION_H] [-rv ROTATION_V]
+         [-o SAVE_SUFFIX] [-f FONT_SIZE] [-s SIMULATE_TILT] [-z IMAGE_SIZE]
+         pattern
 
-   positional arguments:
-     pattern               use specified file or a directory with planet files
+    positional arguments:
+      pattern               use specified file or a directory with planet files
 
-   options:
-     -h, --help            show this help message and exit
-     -v, --verbose         show extra diagnostic messages during execution
-                           (default: False)
-     -s, --show-fig        show figure, pause after each figure is generated
-                           (default: False)
-     -g, --show-legend     draw legend (default: False)
-     -3, --show-3db        draw half-power line (max - 3dB) (default: False)
-     -m, --merge           merge multiple sources to one pattern (default: False)
-     --show-name           draw NAME attribute in caption (default: False)
-     -r ROTATION_OFFSET, --rotation-offset ROTATION_OFFSET
-                           rotational offset when plotting the polar pattern
-                           (default: 0)
-     -f {pdf,eps,png}, --filetype {pdf,eps,png}
-                           file type of the output figure, pdf or eps or png
-                           (default: pdf)
-     -n FILE_NAME_PREFIX, --file-name-prefix FILE_NAME_PREFIX
-                           prefix of the generated filename (default: PYAP_)
-     --fontsize FONTSIZE   font size for texts on the chart (default: 12)
-     --size IMAGE_SIZE     image size in 100px units (default: 8)
+    options:
+      -h, --help            show this help message and exit
+      -v, --verbose         show extra diagnostic messages during execution
+                            (default: False)
+      -i, --show-image      show image and pause after each figure is generated
+                            (default: False)
+      -l, --show-legend     show legend (default: False)
+      -3, --show-3db        show half-power line (max - 3dB) (default: False)
+      -m, --merge           merge multiple sources to one pattern (default: False)
+      -c, --combine         combine horizontal and vertical patterns on chart
+                            (default: False)
+      -w, --hide-watermark  hide watermark with version (default: False)
+      -n, --show-name       show NAME attribute in caption (default: False)
+      -t {pdf,eps,png}, --file-type {pdf,eps,png}
+                            file type of the output figure, pdf or eps or png
+                            (default: pdf)
+      -p FILE_PREFIX, --file-prefix FILE_PREFIX
+                            prefix of the generated filename (default: None)
+      -rh ROTATION_H, --rotation-horizontal ROTATION_H
+                            horizontal rotational offset (default: 0)
+      -rv ROTATION_V, --rotation-vertical ROTATION_V
+                            vertical rotational offset (default: 0)
+      -o SAVE_SUFFIX, --output SAVE_SUFFIX
+                            resave pattern with passed suffix (default: None)
+      -f FONT_SIZE, --font-size FONT_SIZE
+                            font size for texts on the chart (default: 12)
+      -s SIMULATE_TILT, --simulate SIMULATE_TILT
+                            simulate diagramm pattern using TILT (default: None)
+      -z IMAGE_SIZE, --size IMAGE_SIZE
+                            image size in 100px units (default: 8)
 
 
 Credits

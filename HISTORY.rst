@@ -32,7 +32,7 @@ History
 ------------------
 
 * Added beam width measurement, printed to console when --show-3db used.
-* Added SIMULATE_FLAG param to add simulated pattern 60/08 as antenna 2.
+* Added SIMULATE_FLAG param to add simulated pattern 59/07 as antenna 2.
 * Added SIMULATE_TILT param to define tilt for simulated antenna pattern.
 * Added SIMULATE_SAVE param for saving simulation results to MSI file.
 * Added COLOR_* params for configuring colors without changes in code.
@@ -54,5 +54,24 @@ History
 * Added comments with TODO and refernce link to simulate method: `sin(x)/x`.
 * Added ELECTRIC_TILT field to saved MSI files.
 * Added reference to pafx2msi_ and vice versa.
+
+
+1.0.4 (2024-06-25)
+------------------
+* Fixed config params C250_FLAG and C250_ROTATION_OFFSET to HOR_ROTATION_OFFSET.
+* Fixed config params MSIV_FLAG and MSIV_ROTATION_OFFSET to VER_ROTATION_OFFSET.
+* New options -rh and -rv rotates data on loading and allows to resave rotated.
+* Fixed command line option -r to -rh and -rv for separate hor and ver rotation.
+* Fixed command line option -g to -l (--show-legend), -s to -i (--show-image).
+* Fixed command line option -n to -p (--file-prefix), -f to -t (--file-type).
+* Added command line option -f for --font-size, -z for --size, -n for --name.
+* Added command line option -o SAVE_SUFFIX to resave pattern file with rotation.
+* Added command line option -c to combine HORIZONTAL and VERTICAL on one image.
+* Added command line option -s TILT to simulate pattern instead of SIMULATE* params.
+* Added command line option -w to disable drawing watermark with version on image.
+* Added ability to process unlimited number of files by passed mask in -c mode.
+* Added tool name and version to COMMENT in saved pattern and as image watermark.
+* Removed SIMULATE_FLAG and SIMULATE_TILT config params (use option -s).
+
 
 .. _pafx2msi: https://github.com/Strang00/pafx2msi

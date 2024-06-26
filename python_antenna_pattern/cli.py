@@ -11,6 +11,8 @@ try:
   import python_antenna_pattern.config as config
   from python_antenna_pattern.core import AntennaPattern
   from python_antenna_pattern.core import read_name_list
+  from python_antenna_pattern.core import __project__
+  from python_antenna_pattern.core import __version__
 except ModuleNotFoundError:
   import config
   from core import *
@@ -40,15 +42,15 @@ class Pyap:
             help='show extra diagnostic messages during execution'
         )
         self.arg_parser.add_argument(
-            '-s',
-            '--show-fig',
+            '-i',
+            '--show-image',
             action='store_true',
             dest='show_fig',
             default=False,
-            help='show figure, pause after each figure is generated'
+            help='show image and pause after each figure is generated'
         )
         self.arg_parser.add_argument(
-            '-g',
+            '-l',
             '--show-legend',
             action='store_true',
             dest='show_legend',
@@ -72,6 +74,23 @@ class Pyap:
             help='merge multiple sources to one pattern'
         )
         self.arg_parser.add_argument(
+            '-c',
+            '--combine',
+            action='store_true',
+            dest='combine_hv',
+            default=False,
+            help='combine horizontal and vertical patterns on chart'
+        )
+        self.arg_parser.add_argument(
+            '-w',
+            '--hide-watermark',
+            action='store_true',
+            dest='watermark_hide',
+            default=False,
+            help='hide watermark with version'
+        )
+        self.arg_parser.add_argument(
+            '-n',
             '--show-name',
             action='store_true',
             dest='show_name',
@@ -86,40 +105,66 @@ class Pyap:
             )
         )
         self.arg_parser.add_argument(
-            '-r',
-            '--rotation-offset',
-            type=int,
-            dest='rotation_offset',
-            default=0,
-            help='rotational offset when plotting the polar pattern'
-        )
-        self.arg_parser.add_argument(
-            '-f',
-            '--filetype',
+            '-t',
+            '--file-type',
             choices=['pdf', 'eps', 'png'],
-            dest='filetype',
+            dest='file_type',
             default='pdf',
             help='file type of the output figure, pdf or eps or png'
         )
         self.arg_parser.add_argument(
-            '-n',
-            '--file-name-prefix',
+            '-p',
+            '--file-prefix',
             type=str,
-            dest='file_name_prefix',
-            default='PYAP_',
+            dest='file_prefix',
+            default=None,
             help='prefix of the generated filename'
         )
         self.arg_parser.add_argument(
-            '--fontsize',
+            '-rh',
+            '--rotation-horizontal',
             type=int,
-            dest='fontsize',
+            dest='rotation_h',
+            default=0,
+            help='horizontal rotational offset'
+        )
+        self.arg_parser.add_argument(
+            '-rv',
+            '--rotation-vertical',
+            type=int,
+            dest='rotation_v',
+            default=0,
+            help='vertical rotational offset'
+        )
+        self.arg_parser.add_argument(
+            '-o',
+            '--output',
+            type=str,
+            dest='save_suffix',
+            default=None,
+            help='resave pattern with passed suffix'
+        )
+        self.arg_parser.add_argument(
+            '-f',
+            '--font-size',
+            type=int,
+            dest='font_size',
             default=12,
             help='font size for texts on the chart'
         )
         self.arg_parser.add_argument(
+            '-s',
+            '--simulate',
+            type=int,
+            dest='simulate_tilt',
+            default=None,
+            help='simulate diagramm pattern using TILT'
+        )
+        self.arg_parser.add_argument(
+            '-z',
             '--size',
             type=int,
-            dest='imagesize',
+            dest='image_size',
             default=8,
             help='image size in 100px units'
         )
@@ -142,26 +187,39 @@ class Pyap:
         else:
             logger.setLevel(logging.INFO)
         logger.debug('args is %s', args)
-        self.plot_pattern(args)
+        if (args.combine_hv is False or args.merge is True):
+            self.plot_pattern(args)
+        else:
+            src_files = list(glob.glob(args.pattern))
+            if len(src_files) == 0:
+                print(
+                    'Files not found: {}'.format(args.pattern),
+                    file=sys.stderr
+                )
+                sys.exit(os.EX_NOTFOUND)
+            for file in src_files:
+                args.pattern = file
+                self.plot_pattern(args)
 
-
-
+                
     # TODO: use optparse to add options rather than using config.py
     def plot_pattern(self, options, save_file=True):
 
-        fontsize = options.fontsize
-        imagesize = options.imagesize
-        file_name_prefix = options.file_name_prefix
-        file_format = options.filetype
+        fontsize = options.font_size
+        simulate = not (options.simulate_tilt is None)
+        imagesize = options.image_size
+        file_name_prefix = options.file_prefix
+        if (file_name_prefix is None): file_name_prefix = ''
+        file_format = options.file_type
         show_name = options.show_name
         show_3db = options.show_3db
         merge_src = options.merge
         plt.rc('font', size=fontsize)
         if not os.path.isfile(options.pattern):
-            src_files = glob.glob(options.pattern)
+            src_files = list(glob.glob(options.pattern))
             if len(src_files) == 0:
                 print(
-                    'No files in directory {}'.format(options.pattern),
+                    'Files not found: {}'.format(options.pattern),
                     file=sys.stderr
                 )
                 sys.exit(os.EX_NOTFOUND)
@@ -195,9 +253,16 @@ class Pyap:
         rlim_shift = config.RLIM_SHIFT
         gain_ticks_position = config.TICK_POSITION # good with 45 also
 
-        if merge_src is False and len(src_files) > 2:
+        if merge_src is False is False and len(src_files) > 2:
             print(
                 'PYAP currently does not support more than a pair of files at once',
+                file=sys.stderr
+            )
+            sys.exit(70) # os.EX_SOFTWARE available only on UNIX platforms.
+
+        if merge_src is False and options.combine_hv is True and len(src_files) > 1:
+            print(
+                'PYAP currently does not support more than one file at combine mode plot',
                 file=sys.stderr
             )
             sys.exit(70) # os.EX_SOFTWARE available only on UNIX platforms.
@@ -212,12 +277,14 @@ class Pyap:
                 p_list[-1].merge_from(antenna_pattern2)
                 band[-1] = p_list[-1].frequency
                 gain[-1] = p_list[-1].max_gain_db
-                name[-1] = p_list[-1].name + ' MERGED'
+                name[-1] = p_list[-1].name
                 continue
                 
             antenna_pattern = AntennaPattern()
             # parse the antenna gains by cut or by antenna
             antenna_pattern.parse_data(file_path) # config.PARSE_BY
+            if options.rotation_h != 0 or options.rotation_v != 0:
+                antenna_pattern.offset_data(options.rotation_h, options.rotation_v)
                 
             split_name = file_path.rsplit('/')
             file_name = split_name[-1]
@@ -232,26 +299,37 @@ class Pyap:
             # all but last element in the list
             dir_path.append('/'.join(split_name[0:-1]) + '/')
 
-            #Simulate pattern ~69/7
-            if config.SIMULATE_FLAG is True: 
+            if not (options.save_suffix is None):
+                file_name_save = (dir_path[0] + file_name_prefix
+                + os.path.splitext(os.path.basename(file_path))[0]
+                + options.save_suffix + ".msi")
+                antenna_pattern.save_data(file_name_save)
+
+            #Simulate pattern ~59/7 with passed tilt
+            if simulate:
                 band.append(antenna_pattern.frequency)
                 name.append(antenna_pattern.name)
                 gain.append(antenna_pattern.max_gain_db)
-                tilt = int(config.SIMULATE_TILT)
+                tilt = int(options.simulate_tilt)
                 antenna_pattern = AntennaPattern()
                 antenna_pattern.simulate_data(gain[-1], band[-1], tilt)
+                if options.rotation_h != 0 or options.rotation_v != 0:
+                    antenna_pattern.offset_data(options.rotation_h, options.rotation_v)
                 print('simulatig source')
                 p_list.append(antenna_pattern)
+                file_name_prefix += "simulated_" + format(tilt,'02d') + 'T_'
                 if config.SIMULATE_SAVE is True:
-                    # + os.path.splitext(os.path.basename(file_path))[0]
                     file_name_save = (dir_path[0] + file_name_prefix 
-                    + "simulated_" + format(tilt,'02d') + "T.msi")
+                    + os.path.splitext(os.path.basename(file_path))[0]
+                    + ".msi")
                     antenna_pattern.save_data(file_name_save)
 
         if (merge_src is True and len(p_list) >= 1):
+            file_name_prefix += "merged_" + format(len(src_files),'02d') + 'P_'
             if config.MERGE_SAVE is True:
-                #file_name_body = os.path.splitext(os.path.basename(file_path))[0]
-                file_name_save = (dir_path[0] + file_name_prefix + "merged_" + format(antenna_pattern.tilt,'02d') + "T.msi")
+                file_name_save = (dir_path[0] + file_name_prefix 
+                + os.path.splitext(os.path.basename(file_path))[0]
+                + ".msi")
                 antenna_pattern.save_data(file_name_save)
 
         if len(p_list) < 2:
@@ -286,22 +364,52 @@ class Pyap:
 
             # the vertical/horizontal antenna patterns across two files, i.e.,
             # two antennas, are aggregated here the way we aggregate is that
-            # the vertical antenna pattern for the first file, is in rho[0:360]
-            # and the antenna pattern for the second file is in rho[360:720],
+            # the vertical antenna pattern for the first file, is in rho[key][0:360]
+            # and the antenna pattern for the second file is in rho[key][360:720],
             # and so on. Number of antenna to consider
             for key in list(pval.pattern_dict.keys()):
-                if key in rho:
-                    rho[key] = np.append(
-                        rho[key],
-                        pval.max_gain_db - np.asarray(pval.pattern_dict[key]) if config.ABSOLUTE_FLAG is True else -np.asarray(pval.pattern_dict[key])
-                    )
-                # initialize rho dictionary as empty lists
-                else:
-                    rho[key] = (
-                        pval.max_gain_db - np.asarray(pval.pattern_dict[key]) if config.ABSOLUTE_FLAG is True else -np.asarray(pval.pattern_dict[key])
-                    )
+                key_array = pval.max_gain_db - np.asarray(pval.pattern_dict[key]) if config.ABSOLUTE_FLAG is True else -np.asarray(pval.pattern_dict[key])
 
-        for key in list(pval.pattern_dict.keys()):
+                # in C250 planet files the angle is rotated by 90
+                if key == 'horizontal' and config.HOR_ROTATION_OFFSET != 0:
+                    rotation_offset = config.HOR_ROTATION_OFFSET
+                    rotation_temp = list(key_array)
+                    for l in range(0, 360):
+                        key_array[(l + rotation_offset + 360) % 360] = rotation_temp[l]
+
+                # in most mobile antenna vendors specs vertical peak drawn to look at 90 degrees
+                if key == 'vertical' and config.VER_ROTATION_OFFSET != 0:
+                    rotation_offset = config.VER_ROTATION_OFFSET
+                    rotation_temp = list(key_array)
+                    for l in range(0, 360):
+                        key_array[(l + rotation_offset + 360) % 360] = rotation_temp[l]
+
+                key_write = key if options.combine_hv is False else ''
+                if key_write not in rho:
+                    rho[key_write] = []
+                rho[key_write] = np.append(
+                    rho[key_write],
+                    key_array
+                )
+
+        for key in list(rho.keys()):
+            if options.combine_hv is True:
+                name1 = 'horizontal'
+                name2 = 'vertical'
+                key_suffix = ''
+            elif self.single_file_flag is True:
+                name1 = key
+                name2 = ''
+                key_suffix = '_' + key
+            elif simulate is True:
+                name1 = key
+                name2 = 'simulated'
+                key_suffix = '_' + key
+            else:
+                name1 = key + ' 1'
+                name2 = key + ' 2'
+                key_suffix = ' ' + key
+
             max_value = max(rho[key]) 
             max_gain_db = gain[0]
             max_list.append(max_gain_db)
@@ -320,7 +428,11 @@ class Pyap:
             ax.tick_params(axis='y', which='major', labelrotation=-gain_ticks_position)
             # set ticks position
             ax.set_rlabel_position(gain_ticks_position)
-
+            if options.watermark_hide is False:
+                ax.text(1.1, -0.1, f'Generated by {__project__} v{__version__}', transform=ax.transAxes, 
+                    fontsize=fontsize, color='gray', alpha=0.2,
+                    ha='right', va='top')
+            
             # in two-file mode long/right antenna is always red, and is always in second file
             # in one-file mode horisontal/vertical are in blue/red colors
             temp0 = np.full(360, max_value-3)           
@@ -333,10 +445,10 @@ class Pyap:
             if show_3db is True:
                 width1 = np.full(4, -1) # width, left border, value with 0, right border
                 width2 = np.full(4, -1) # width, left border, value with 0, right border
-                prev_value1 = 0
-                prev_value2 = 0
-                peak_value1 = 30
-                peak_value2 = 30
+                prev_value1 = 0.0
+                prev_value2 = 0.0
+                peak_value1 = 30.0
+                peak_value2 = 30.0
                 for l in range(0, 360):
                     curr_value1 = -temp1[l] - (max_gain_db if config.ABSOLUTE_FLAG is True else 0)
                     if (prev_value1 > 3 and curr_value1 <=3):
@@ -347,7 +459,7 @@ class Pyap:
                     if (prev_value1 < 3 and curr_value1 >=3):
                         width1[3] = l
                     prev_value1 = curr_value1
-                    if (self.single_file_flag is False):
+                    if (self.single_file_flag is False or options.combine_hv is True):
                         curr_value2 = -temp2[l] - (max_gain_db if config.ABSOLUTE_FLAG is True else 0)
                         if (prev_value2 >= 3 and curr_value2 <=3):
                             width2[1] = l
@@ -357,51 +469,24 @@ class Pyap:
                         if (prev_value2 <= 3 and curr_value2 >=3):
                             width2[3] = l
                         prev_value2 = curr_value2
-                if (width1[1] >= 0): 
+                if width1[1] >= 0:
                     width1[0] = (width1[3] - width1[1] + 360) %360
-                    print('Antenna 1 width ' + key + ': ' + format(width1[0], ".2f"))
-                    print('Antenna 1 peak  ' + key + ': ' + format(width1[2], ".2f"))
-                if (peak_value1 > 0): 
-                    print('Antenna 1 max   ' + key + ': ' + format(peak_value1, ".2f") + " above zero")
-                if (width2[1] >= 0): 
-                    width2[0] = (width2[3] - width2[1] + 360) %360
-                    print('Antenna 2 width ' + key + ': ' + format(width2[0], ".2f"))
-                    print('Antenna 2 peak  ' + key + ': ' + format(width2[2], ".2f"))
-                if (peak_value2 > 0): 
-                    print('Antenna 2 max   ' + key + ': ' + format(peak_value2, ".2f") + " above zero")
-
-            # a hack for C250 planet files where the angle is rotated by 90
-            if key == 'horizontal' and config.C250_FLAG is True:
-                rotation_offset = config.C250_ROTATION_OFFSET
-                for l in range(0, 360):
-                    buf1[(l + rotation_offset) % 360] = temp1[l]
-                    if self.single_file_flag is False:
-                        buf2[(l + rotation_offset) % 360] = temp2[l]
-                temp1 = buf1
-                temp2 = buf2
-
-            if key == 'vertical' and config.MSIV_FLAG is True:
-                rotation_offset = config.MSIV_ROTATION_OFFSET
-                for l in range(0, 360):
-                    buf1[(l + rotation_offset) % 360] = temp1[l]
-                    if self.single_file_flag is False:
-                        buf2[(l + rotation_offset) % 360] = temp2[l]
-                temp1 = buf1
-                temp2 = buf2
-
-            if options.rotation_offset > 0:
-                rotation_offset = options.rotation_offset
-                for l in range(0, 360):
-                    buf1[(l + rotation_offset) % 360] = temp1[l]
-                    if self.single_file_flag is False:
-                        buf2[(l + rotation_offset) % 360] = temp2[l]
-                temp1 = buf1
-                temp2 = buf2
+                    print(f'{name1} width: {width1[0]:.2f}')
+                    print(f'{name1} peak : {width1[2]:.2f}')
+                if peak_value1 > 0:
+                    print(f'{name1} max  : {peak_value1:.2f} above zero')
+                if (self.single_file_flag is False or options.combine_hv is True):
+                    if width2[1] >= 0:
+                        width2[0] = (width2[3] - width2[1] + 360) %360
+                        print(f'{name2} width: {width2[0]:.2f}')
+                        print(f'{name2} peak : {width2[2]:.2f}')
+                    if peak_value2 > 0:
+                        print(f'{name2} max  : {peak_value2:.2f} above zero')
 
             # Add first as last to draw 359-0
             thet0 = np.insert(theta,360,theta[0])    
             temp1 = np.insert(temp1,360,temp1[0])
-            if self.single_file_flag is False:
+            if self.single_file_flag is False or options.combine_hv is True:
                 temp2 = np.insert(temp2,360,temp2[0])
 
             if show_3db is True:
@@ -414,11 +499,29 @@ class Pyap:
                     ls= '--',
                     lw= 1
                 )                               
-            if self.single_file_flag is True:
+            if (options.combine_hv is True):
                 plt.polar(
                     thet0,
                     temp1,
-                    label= key, #'Antenna 1',
+                    label= name1,
+                    color= config.COLOR_HOR,
+                    ls= '-',
+                    lw= line_width
+                )
+                plt.polar(
+                    thet0,
+                    temp2,
+                    label= name2,
+                    color= config.COLOR_VER,
+                    ls= '-',
+                    lw= line_width
+                )
+            
+            elif self.single_file_flag is True:
+                plt.polar(
+                    thet0,
+                    temp1,
+                    label= name1,
                     color= config.COLOR_HOR if key == 'horizontal' else config.COLOR_VER,
                     ls= '-',
                     lw= line_width
@@ -427,7 +530,7 @@ class Pyap:
                 plt.polar(
                     thet0,
                     temp1,
-                    label= key + ' 1', #'Antenna 1',
+                    label= name1,
                     color= config.COLOR_2A1,
                     ls= '-',
                     lw= line_width
@@ -435,7 +538,7 @@ class Pyap:
                 plt.polar(
                     thet0,
                     temp2,
-                    label= key + ' 2', #'Antenna 2',
+                    label= name2,
                     color= config.COLOR_2A2,
                     ls= '--',
                     lw= line_width
@@ -444,7 +547,7 @@ class Pyap:
 
             # not working well with python 2.7
             if options.show_legend is True:
-                plt.legend(loc='lower left', borderaxespad=-1.8)
+                plt.legend(loc='lower left', borderaxespad=-2.0)
             tick_range = np.arange(
                 np.floor(tick_start),
                 np.ceil(tick_stop)+0.1,
@@ -474,18 +577,13 @@ class Pyap:
                 tick_label_full.append(' %1.1f %s' % (x,units))
             ax.set_yticklabels(tick_label_full)
             if save_file:
-                file_name_body = os.path.splitext(os.path.basename(file_path))[0]
                 file_path_save = dir_path[0] + file_format + '/'
                 if not os.path.exists(file_path_save):
                     os.makedirs(file_path_save)
-
-                output_name = (
-                    file_path_save + file_name_prefix + file_name_body + '_' + key + '.' + file_format
-                )
-                plt.savefig(output_name, format=file_format)
-                print(
-                    '{} file saved at {}'.format(file_format, output_name)
-                )
+                file_name_body = os.path.splitext(os.path.basename(file_path))[0] + key_suffix
+                file_name_save = file_path_save + file_name_prefix + file_name_body + '.' + file_format
+                plt.savefig(file_name_save, format=file_format)
+                print( '{} file saved at {}'.format(file_format, file_name_save) )
 
             if options.show_fig:
                 plt.draw()
